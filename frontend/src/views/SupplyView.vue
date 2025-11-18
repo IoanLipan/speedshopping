@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useSupplyStore } from '@/stores/supply'
 import { useHistoryStore } from '@/stores/history'
 import type { SupplyItem } from '@/types'
+import { supplyItemTemplates, getTemplatesByCategory, getTemplateCategories, type ProductTemplate } from '@/data/productTemplates'
 
 const router = useRouter()
 const supplyStore = useSupplyStore()
@@ -11,9 +12,11 @@ const historyStore = useHistoryStore()
 
 const editMode = ref(false)
 const showAddModal = ref(false)
+const showQuickAdd = ref(false)
 const editingItem = ref<SupplyItem | null>(null)
 const searchQuery = ref('')
 const filterCategory = ref('all')
+const quickAddCategory = ref('all')
 
 const newItem = ref({
   name: '',
@@ -47,6 +50,14 @@ const filteredItems = computed(() => {
 const categories = computed(() => {
   const cats = new Set(supplyStore.items.map(item => item.category).filter(Boolean))
   return Array.from(cats)
+})
+
+const templateCategories = computed(() => {
+  return getTemplateCategories(supplyItemTemplates)
+})
+
+const filteredTemplates = computed(() => {
+  return getTemplatesByCategory(supplyItemTemplates, quickAddCategory.value)
 })
 
 onMounted(() => {
@@ -128,6 +139,26 @@ function redo() {
   historyStore.redo()
   historyStore.updateCanUndoRedo()
 }
+
+async function quickAddTemplate(template: ProductTemplate) {
+  try {
+    await supplyStore.addItem({
+      name: template.name,
+      quantity: template.defaultQuantity,
+      dailyConsumption: template.defaultDailyConsumption,
+      price: 0,
+      currency: 'USD',
+      category: template.category,
+      lowStockThreshold: template.defaultLowStockThreshold,
+      notes: template.notes,
+      productUrl: '',
+      addToCartUrl: '',
+    })
+  } catch (error) {
+    console.error('Failed to add template item:', error)
+    alert('Failed to add item')
+  }
+}
 </script>
 
 <template>
@@ -186,6 +217,55 @@ function redo() {
             {{ cat }}
           </option>
         </select>
+      </div>
+
+      <!-- Quick Add Section -->
+      <div class="mb-6">
+        <button
+          @click="showQuickAdd = !showQuickAdd"
+          class="w-full flex items-center justify-between p-4 bg-white border-2 border-primary-200 rounded-lg hover:border-primary-400 transition-colors"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-lg">⚡</span>
+            <span class="font-semibold text-primary-700">Quick Add Common Items</span>
+          </div>
+          <span class="text-2xl text-primary-600">{{ showQuickAdd ? '−' : '+' }}</span>
+        </button>
+
+        <div v-if="showQuickAdd" class="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+          <!-- Category Filter for Templates -->
+          <div class="mb-4">
+            <select v-model="quickAddCategory" class="input">
+              <option value="all">All Categories</option>
+              <option v-for="cat in templateCategories" :key="cat" :value="cat">
+                {{ cat }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Template Items Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <button
+              v-for="template in filteredTemplates"
+              :key="template.name"
+              @click="quickAddTemplate(template)"
+              class="flex flex-col items-center justify-center p-3 border-2 border-gray-200 rounded-lg hover:border-primary-400 hover:bg-primary-50 transition-all group"
+              :title="`Add ${template.name}`"
+            >
+              <span class="text-3xl mb-1">{{ template.icon }}</span>
+              <span class="text-xs font-medium text-center text-gray-700 group-hover:text-primary-700">
+                {{ template.name }}
+              </span>
+              <span class="text-xs text-gray-500 mt-1">
+                {{ template.defaultQuantity }} {{ template.unit }}
+              </span>
+            </button>
+          </div>
+
+          <p class="text-xs text-gray-500 mt-4 text-center">
+            Click any item to quickly add it with default values. You can edit details later.
+          </p>
+        </div>
       </div>
 
       <!-- Items List -->
