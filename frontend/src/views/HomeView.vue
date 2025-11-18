@@ -71,11 +71,11 @@ function logout() {
         <div class="card">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-600">Shopping List</p>
-              <p class="text-3xl font-bold text-primary-600">{{ stats.necessityCount }}</p>
+              <p class="text-sm text-gray-600">Necessity List</p>
+              <p class="text-3xl font-bold text-purple-600">{{ stats.necessityCount }}</p>
             </div>
-            <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
@@ -99,11 +99,11 @@ function logout() {
         <div class="card">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-gray-600">Shopping Cost</p>
-              <p class="text-3xl font-bold text-orange-600">${{ stats.shoppingListCost.toFixed(2) }}</p>
+              <p class="text-sm text-gray-600">Necessity Cost</p>
+              <p class="text-3xl font-bold text-purple-600">${{ stats.shoppingListCost.toFixed(2) }}</p>
             </div>
-            <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
@@ -127,12 +127,12 @@ function logout() {
 
         <router-link to="/necessity" class="card hover:shadow-md transition-shadow">
           <div class="text-center py-4">
-            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 class="font-semibold text-gray-900">Shopping List</h3>
+            <h3 class="font-semibold text-gray-900">Necessity List</h3>
             <p class="text-sm text-gray-600">Track what you need</p>
           </div>
         </router-link>

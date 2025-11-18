@@ -1,32 +1,36 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { analyticsService } from '@/services/api'
+import type { SpendingAnalytics } from '@/types'
 
 const router = useRouter()
 const period = ref<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly')
 const loading = ref(false)
 
-// Mock data - will be replaced with real API data
-const analytics = ref({
-  daily: 15.50,
-  weekly: 108.50,
-  monthly: 465.20,
-  yearly: 5582.40,
-  byCategory: {
-    'Food': 245.30,
-    'Household': 123.45,
-    'Personal Care': 96.45,
-  },
-  byItem: {
-    'Cottage Cheese': 45.00,
-    'Toilet Paper': 32.50,
-    'Eggs': 28.75,
-    'Dish Sponge': 12.30,
-  },
+const analytics = ref<SpendingAnalytics>({
+  daily: 0,
+  weekly: 0,
+  monthly: 0,
+  yearly: 0,
+  byCategory: {},
+  byItem: {},
 })
 
+async function fetchAnalytics() {
+  loading.value = true
+  try {
+    const data = await analyticsService.getSpending(period.value)
+    analytics.value = data
+  } catch (error) {
+    console.error('Failed to fetch analytics:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
-  // TODO: Fetch real analytics data
+  fetchAnalytics()
 })
 </script>
 
@@ -99,7 +103,10 @@ onMounted(() => {
       <!-- By Category -->
       <div class="card mb-8">
         <h2 class="text-xl font-bold text-gray-900 mb-4">Spending by Category</h2>
-        <div class="space-y-3">
+        <div v-if="Object.keys(analytics.byCategory).length === 0" class="text-center py-8 text-gray-500">
+          No category data available yet. Start tracking items to see analytics!
+        </div>
+        <div v-else class="space-y-3">
           <div
             v-for="(amount, category) in analytics.byCategory"
             :key="category"
@@ -113,7 +120,7 @@ onMounted(() => {
               <div class="w-full bg-gray-200 rounded-full h-2">
                 <div
                   class="bg-primary-500 h-2 rounded-full"
-                  :style="{ width: `${(amount / analytics.monthly) * 100}%` }"
+                  :style="{ width: `${analytics.monthly > 0 ? (amount / analytics.monthly) * 100 : 0}%` }"
                 ></div>
               </div>
             </div>
@@ -124,7 +131,10 @@ onMounted(() => {
       <!-- By Item -->
       <div class="card">
         <h2 class="text-xl font-bold text-gray-900 mb-4">Top Items by Spending</h2>
-        <div class="space-y-3">
+        <div v-if="Object.keys(analytics.byItem).length === 0" class="text-center py-8 text-gray-500">
+          No item data available yet. Start tracking items to see analytics!
+        </div>
+        <div v-else class="space-y-3">
           <div
             v-for="(amount, item) in analytics.byItem"
             :key="item"
@@ -138,7 +148,7 @@ onMounted(() => {
               <div class="w-full bg-gray-200 rounded-full h-2">
                 <div
                   class="bg-green-500 h-2 rounded-full"
-                  :style="{ width: `${(amount / analytics.monthly) * 100}%` }"
+                  :style="{ width: `${analytics.monthly > 0 ? (amount / analytics.monthly) * 100 : 0}%` }"
                 ></div>
               </div>
             </div>
