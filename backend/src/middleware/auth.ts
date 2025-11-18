@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { auth } from '../config/firebase.js'
+import { supabase } from '../config/supabase.js'
 
 export interface AuthRequest extends Request {
   user?: {
@@ -21,11 +21,17 @@ export async function authenticate(
     }
 
     const token = authHeader.split('Bearer ')[1]
-    const decodedToken = await auth.verifyIdToken(token)
+
+    // Verify the JWT token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+
+    if (error || !user) {
+      return res.status(401).json({ error: 'Unauthorized' })
+    }
 
     req.user = {
-      uid: decodedToken.uid,
-      email: decodedToken.email,
+      uid: user.id,
+      email: user.email,
     }
 
     next()

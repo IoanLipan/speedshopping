@@ -1,8 +1,8 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
-import { db } from '../config/firebase.js'
+import { supabase } from '../config/supabase.js'
 
-const PRICE_HISTORY_COLLECTION = 'priceHistory'
+const PRICE_HISTORY_TABLE = 'price_history'
 
 export class PriceScraperService {
   /**
@@ -60,27 +60,37 @@ export class PriceScraperService {
    * Saves price to history
    */
   async savePriceHistory(itemId: string, price: number): Promise<void> {
-    await db.collection(PRICE_HISTORY_COLLECTION).add({
-      itemId,
-      price,
-      scrapedAt: new Date(),
-    })
+    const { error } = await supabase
+      .from(PRICE_HISTORY_TABLE)
+      .insert({
+        item_id: itemId,
+        price,
+        scraped_at: new Date().toISOString(),
+      })
+
+    if (error) {
+      throw new Error(`Failed to save price history: ${error.message}`)
+    }
   }
 
   /**
    * Gets price history for an item
    */
   async getPriceHistory(itemId: string, limit: number = 30): Promise<Array<{ price: number; scrapedAt: Date }>> {
-    const snapshot = await db
-      .collection(PRICE_HISTORY_COLLECTION)
-      .where('itemId', '==', itemId)
-      .orderBy('scrapedAt', 'desc')
+    const { data, error } = await supabase
+      .from(PRICE_HISTORY_TABLE)
+      .select('*')
+      .eq('item_id', itemId)
+      .order('scraped_at', { ascending: false })
       .limit(limit)
-      .get()
 
-    return snapshot.docs.map(doc => ({
-      price: doc.data().price,
-      scrapedAt: doc.data().scrapedAt.toDate(),
+    if (error) {
+      throw new Error(`Failed to fetch price history: ${error.message}`)
+    }
+
+    return (data || []).map(row => ({
+      price: row.price,
+      scrapedAt: new Date(row.scraped_at),
     }))
   }
 

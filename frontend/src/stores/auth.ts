@@ -1,14 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types'
-import { auth } from '@/services/firebase'
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  type User as FirebaseUser,
-} from 'firebase/auth'
+import { supabase } from '@/services/supabase'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -17,14 +10,31 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!user.value)
 
   function initAuth() {
-    onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
         user.value = {
-          id: firebaseUser.uid,
-          email: firebaseUser.email!,
-          displayName: firebaseUser.displayName || undefined,
-          photoURL: firebaseUser.photoURL || undefined,
-          createdAt: new Date(firebaseUser.metadata.creationTime!),
+          id: session.user.id,
+          email: session.user.email!,
+          displayName: session.user.user_metadata?.display_name || undefined,
+          photoURL: session.user.user_metadata?.photo_url || undefined,
+          createdAt: new Date(session.user.created_at),
+        }
+      } else {
+        user.value = null
+      }
+      loading.value = false
+    })
+
+    // Listen for auth changes
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        user.value = {
+          id: session.user.id,
+          email: session.user.email!,
+          displayName: session.user.user_metadata?.display_name || undefined,
+          photoURL: session.user.user_metadata?.photo_url || undefined,
+          createdAt: new Date(session.user.created_at),
         }
       } else {
         user.value = null
@@ -35,7 +45,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(email: string, password: string) {
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) throw error
     } catch (error: any) {
       throw new Error(error.message)
     }
@@ -43,7 +57,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function register(email: string, password: string) {
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+      if (error) throw error
     } catch (error: any) {
       throw new Error(error.message)
     }
@@ -51,7 +69,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
-      await signOut(auth)
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
     } catch (error: any) {
       throw new Error(error.message)
     }
