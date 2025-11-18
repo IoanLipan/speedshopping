@@ -19,9 +19,15 @@ export class NecessityService {
       id: row.id,
       userId: row.user_id,
       name: row.name,
+      quantity: row.quantity || 1,
+      price: row.price || 0,
+      currency: row.currency || 'USD',
+      productUrl: row.product_url,
+      addToCartUrl: row.add_to_cart_url,
       category: row.category,
-      notes: row.notes,
+      priority: row.priority || 'medium',
       completed: row.completed,
+      notes: row.notes,
       createdAt: new Date(row.created_at),
       completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
     }))
@@ -43,9 +49,15 @@ export class NecessityService {
       id: data.id,
       userId: data.user_id,
       name: data.name,
+      quantity: data.quantity || 1,
+      price: data.price || 0,
+      currency: data.currency || 'USD',
+      productUrl: data.product_url,
+      addToCartUrl: data.add_to_cart_url,
       category: data.category,
-      notes: data.notes,
+      priority: data.priority || 'medium',
       completed: data.completed,
+      notes: data.notes,
       createdAt: new Date(data.created_at),
       completedAt: data.completed_at ? new Date(data.completed_at) : undefined,
     }
@@ -57,7 +69,13 @@ export class NecessityService {
       .insert({
         user_id: userId,
         name: data.name,
+        quantity: data.quantity || 1,
+        price: data.price || 0,
+        currency: data.currency || 'USD',
+        product_url: data.productUrl,
+        add_to_cart_url: data.addToCartUrl,
         category: data.category,
+        priority: data.priority || 'medium',
         notes: data.notes,
         completed: false,
       })
@@ -72,9 +90,15 @@ export class NecessityService {
       id: inserted.id,
       userId: inserted.user_id,
       name: inserted.name,
+      quantity: inserted.quantity || 1,
+      price: inserted.price || 0,
+      currency: inserted.currency || 'USD',
+      productUrl: inserted.product_url,
+      addToCartUrl: inserted.add_to_cart_url,
       category: inserted.category,
-      notes: inserted.notes,
+      priority: inserted.priority || 'medium',
       completed: inserted.completed,
+      notes: inserted.notes,
       createdAt: new Date(inserted.created_at),
       completedAt: inserted.completed_at ? new Date(inserted.completed_at) : undefined,
     }
@@ -89,7 +113,13 @@ export class NecessityService {
 
     const updateData: any = {}
     if (updates.name !== undefined) updateData.name = updates.name
+    if (updates.quantity !== undefined) updateData.quantity = updates.quantity
+    if (updates.price !== undefined) updateData.price = updates.price
+    if (updates.currency !== undefined) updateData.currency = updates.currency
+    if (updates.productUrl !== undefined) updateData.product_url = updates.productUrl
+    if (updates.addToCartUrl !== undefined) updateData.add_to_cart_url = updates.addToCartUrl
     if (updates.category !== undefined) updateData.category = updates.category
+    if (updates.priority !== undefined) updateData.priority = updates.priority
     if (updates.notes !== undefined) updateData.notes = updates.notes
     if (updates.completed !== undefined) {
       updateData.completed = updates.completed
@@ -112,9 +142,15 @@ export class NecessityService {
       id: data.id,
       userId: data.user_id,
       name: data.name,
+      quantity: data.quantity || 1,
+      price: data.price || 0,
+      currency: data.currency || 'USD',
+      productUrl: data.product_url,
+      addToCartUrl: data.add_to_cart_url,
       category: data.category,
-      notes: data.notes,
+      priority: data.priority || 'medium',
       completed: data.completed,
+      notes: data.notes,
       createdAt: new Date(data.created_at),
       completedAt: data.completed_at ? new Date(data.completed_at) : undefined,
     }

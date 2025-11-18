@@ -43,8 +43,26 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
+
+  // Wait for auth to initialize if it's still loading
+  if (authStore.loading) {
+    // Wait for the loading to complete
+    await new Promise<void>((resolve) => {
+      const unwatch = authStore.$subscribe(() => {
+        if (!authStore.loading) {
+          unwatch()
+          resolve()
+        }
+      })
+      // Also check immediately in case it finished between check and subscribe
+      if (!authStore.loading) {
+        unwatch()
+        resolve()
+      }
+    })
+  }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')

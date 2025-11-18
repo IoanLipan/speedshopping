@@ -21,9 +21,12 @@ export class SupplyService {
       name: row.name,
       category: row.category,
       quantity: row.quantity,
-      unit: row.unit,
       dailyConsumption: row.daily_consumption,
       daysRemaining: row.days_remaining,
+      price: row.price || 0,
+      currency: row.currency || 'USD',
+      productUrl: row.product_url,
+      addToCartUrl: row.add_to_cart_url,
       lowStockThreshold: row.low_stock_threshold,
       notes: row.notes,
       createdAt: new Date(row.created_at),
@@ -49,9 +52,12 @@ export class SupplyService {
       name: data.name,
       category: data.category,
       quantity: data.quantity,
-      unit: data.unit,
       dailyConsumption: data.daily_consumption,
       daysRemaining: data.days_remaining,
+      price: data.price || 0,
+      currency: data.currency || 'USD',
+      productUrl: data.product_url,
+      addToCartUrl: data.add_to_cart_url,
       lowStockThreshold: data.low_stock_threshold,
       notes: data.notes,
       createdAt: new Date(data.created_at),
@@ -71,9 +77,13 @@ export class SupplyService {
         name: data.name,
         category: data.category,
         quantity: data.quantity,
-        unit: data.unit,
+        unit: 'units', // Default unit
         daily_consumption: data.dailyConsumption,
         days_remaining: daysRemaining,
+        price: data.price || 0,
+        currency: data.currency || 'USD',
+        product_url: data.productUrl,
+        add_to_cart_url: data.addToCartUrl,
         low_stock_threshold: data.lowStockThreshold,
         notes: data.notes,
       })
@@ -90,9 +100,12 @@ export class SupplyService {
       name: inserted.name,
       category: inserted.category,
       quantity: inserted.quantity,
-      unit: inserted.unit,
       dailyConsumption: inserted.daily_consumption,
       daysRemaining: inserted.days_remaining,
+      price: inserted.price || 0,
+      currency: inserted.currency || 'USD',
+      productUrl: inserted.product_url,
+      addToCartUrl: inserted.add_to_cart_url,
       lowStockThreshold: inserted.low_stock_threshold,
       notes: inserted.notes,
       createdAt: new Date(inserted.created_at),
@@ -123,8 +136,11 @@ export class SupplyService {
     if (updates.name !== undefined) updateData.name = updates.name
     if (updates.category !== undefined) updateData.category = updates.category
     if (updates.quantity !== undefined) updateData.quantity = updates.quantity
-    if (updates.unit !== undefined) updateData.unit = updates.unit
     if (updates.dailyConsumption !== undefined) updateData.daily_consumption = updates.dailyConsumption
+    if (updates.price !== undefined) updateData.price = updates.price
+    if (updates.currency !== undefined) updateData.currency = updates.currency
+    if (updates.productUrl !== undefined) updateData.product_url = updates.productUrl
+    if (updates.addToCartUrl !== undefined) updateData.add_to_cart_url = updates.addToCartUrl
     if (updates.lowStockThreshold !== undefined) updateData.low_stock_threshold = updates.lowStockThreshold
     if (updates.notes !== undefined) updateData.notes = updates.notes
 
@@ -146,9 +162,12 @@ export class SupplyService {
       name: data.name,
       category: data.category,
       quantity: data.quantity,
-      unit: data.unit,
       dailyConsumption: data.daily_consumption,
       daysRemaining: data.days_remaining,
+      price: data.price || 0,
+      currency: data.currency || 'USD',
+      productUrl: data.product_url,
+      addToCartUrl: data.add_to_cart_url,
       lowStockThreshold: data.low_stock_threshold,
       notes: data.notes,
       createdAt: new Date(data.created_at),

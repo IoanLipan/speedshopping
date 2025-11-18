@@ -28,6 +28,16 @@ const newItem = ref({
   notes: '',
 })
 
+const isFormDirty = computed(() => {
+  return newItem.value.name !== '' ||
+    newItem.value.quantity !== 1 ||
+    newItem.value.price !== 0 ||
+    newItem.value.productUrl !== '' ||
+    newItem.value.addToCartUrl !== '' ||
+    newItem.value.category !== '' ||
+    newItem.value.notes !== ''
+})
+
 const filteredItems = computed(() => {
   let items = showCompleted.value ? necessityStore.items : necessityStore.activeItems
 
@@ -98,6 +108,16 @@ function openEditModal(item: NecessityItem) {
   showAddModal.value = true
 }
 
+function closeModal() {
+  if (isFormDirty.value) {
+    if (confirm('You have unsaved changes. Are you sure you want to close?')) {
+      showAddModal.value = false
+    }
+  } else {
+    showAddModal.value = false
+  }
+}
+
 async function saveItem() {
   try {
     if (editingItem.value) {
@@ -152,7 +172,7 @@ function redo() {
             <button @click="router.back()" class="btn btn-secondary">
               ← Back
             </button>
-            <h1 class="text-2xl font-bold text-primary-600">Shopping List</h1>
+            <h1 class="text-2xl font-bold text-primary-600">Necessity List</h1>
           </div>
           <div class="flex items-center space-x-2">
             <button
@@ -315,7 +335,6 @@ function redo() {
     <div
       v-if="showAddModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-      @click.self="showAddModal = false"
     >
       <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h2 class="text-2xl font-bold mb-4">
@@ -385,7 +404,7 @@ function redo() {
             <button type="submit" class="btn btn-primary flex-1">
               {{ editingItem ? 'Update' : 'Add' }}
             </button>
-            <button type="button" @click="showAddModal = false" class="btn btn-secondary flex-1">
+            <button type="button" @click="closeModal" class="btn btn-secondary flex-1">
               Cancel
             </button>
           </div>
