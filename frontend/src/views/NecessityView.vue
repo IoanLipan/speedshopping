@@ -22,6 +22,7 @@ const quickAddCategory = ref('all')
 const newItem = ref({
   name: '',
   quantity: 1,
+  acquiredQuantity: 0,
   price: 0,
   currency: 'USD',
   productUrl: '',
@@ -29,6 +30,7 @@ const newItem = ref({
   category: '',
   priority: 'medium' as 'low' | 'medium' | 'high',
   notes: '',
+  timesAddedToCart: 0,
 })
 
 const isFormDirty = computed(() => {
@@ -54,7 +56,15 @@ const filteredItems = computed(() => {
     items = items.filter(item => item.priority === filterPriority.value)
   }
 
+  // Sort by frequency (times added to cart) first, then by priority
   return items.sort((a, b) => {
+    const freqA = a.timesAddedToCart || 0
+    const freqB = b.timesAddedToCart || 0
+
+    if (freqB !== freqA) {
+      return freqB - freqA // Higher frequency first
+    }
+
     const priorityOrder = { high: 0, medium: 1, low: 2 }
     return priorityOrder[a.priority] - priorityOrder[b.priority]
   })
@@ -80,10 +90,10 @@ onMounted(() => {
 
 function getPriorityColor(priority: string) {
   switch (priority) {
-    case 'high': return 'bg-red-100 text-red-800 border-red-200'
-    case 'medium': return 'bg-orange-100 text-orange-800 border-orange-200'
-    case 'low': return 'bg-green-100 text-green-800 border-green-200'
-    default: return 'bg-gray-100 text-gray-800 border-gray-200'
+    case 'high': return 'bg-red-900/30 text-red-400 border-red-800'
+    case 'medium': return 'bg-orange-900/30 text-orange-400 border-orange-800'
+    case 'low': return 'bg-green-900/30 text-green-400 border-green-800'
+    default: return 'bg-gray-800 text-gray-300 border-gray-700'
   }
 }
 
@@ -91,6 +101,7 @@ function openAddModal() {
   newItem.value = {
     name: '',
     quantity: 1,
+    acquiredQuantity: 0,
     price: 0,
     currency: 'USD',
     productUrl: '',
@@ -98,6 +109,7 @@ function openAddModal() {
     category: '',
     priority: 'medium',
     notes: '',
+    timesAddedToCart: 0,
   }
   editingItem.value = null
   showAddModal.value = true
@@ -108,6 +120,7 @@ function openEditModal(item: NecessityItem) {
   newItem.value = {
     name: item.name,
     quantity: item.quantity,
+    acquiredQuantity: item.acquiredQuantity || 0,
     price: item.price,
     currency: item.currency,
     productUrl: item.productUrl || '',
@@ -115,6 +128,7 @@ function openEditModal(item: NecessityItem) {
     category: item.category || '',
     priority: item.priority,
     notes: item.notes || '',
+    timesAddedToCart: item.timesAddedToCart || 0,
   }
   showAddModal.value = true
 }
@@ -177,6 +191,7 @@ async function quickAddTemplate(template: ProductTemplate) {
     await necessityStore.addItem({
       name: template.name,
       quantity: template.defaultQuantity,
+      acquiredQuantity: 0,
       price: 0,
       currency: 'USD',
       category: template.category,
@@ -184,48 +199,115 @@ async function quickAddTemplate(template: ProductTemplate) {
       notes: template.notes,
       productUrl: '',
       addToCartUrl: '',
+      timesAddedToCart: 1,
     })
   } catch (error) {
     console.error('Failed to add template item:', error)
     alert('Failed to add item')
   }
 }
+
+async function handleIncrementAcquired(item: NecessityItem) {
+  try {
+    const result = await necessityStore.incrementAcquired(item.id)
+    if (result?.isNowComplete) {
+      // Transfer to supply when complete
+      await transferToSupply(result.item)
+    }
+  } catch (error) {
+    console.error('Failed to increment acquired quantity:', error)
+  }
+}
+
+async function handleDecrementAcquired(item: NecessityItem) {
+  try {
+    await necessityStore.decrementAcquired(item.id)
+  } catch (error) {
+    console.error('Failed to decrement acquired quantity:', error)
+  }
+}
+
+async function handleIncreaseTarget(item: NecessityItem) {
+  try {
+    await necessityStore.increaseTargetQuantity(item.id)
+  } catch (error) {
+    console.error('Failed to increase target quantity:', error)
+  }
+}
+
+async function transferToSupply(item: NecessityItem) {
+  // Import supply store at the top if not already imported
+  const { useSupplyStore } = await import('@/stores/supply')
+  const supplyStore = useSupplyStore()
+
+  try {
+    // Add to supply with default consumption values
+    await supplyStore.addItem({
+      name: item.name,
+      quantity: item.quantity,
+      unit: 'pcs',
+      dailyConsumption: 1,
+      price: item.price,
+      currency: item.currency,
+      productUrl: item.productUrl || '',
+      addToCartUrl: item.addToCartUrl || '',
+      category: item.category || '',
+      lowStockThreshold: 3,
+      notes: item.notes || 'Auto-added from shopping list',
+    })
+  } catch (error) {
+    console.error('Failed to transfer to supply:', error)
+  }
+}
+
+function getProgressPercentage(item: NecessityItem): number {
+  const acquired = item.acquiredQuantity || 0
+  return (acquired / item.quantity) * 100
+}
+
+function getProgressColor(percentage: number): string {
+  if (percentage >= 100) return 'bg-green-500'
+  if (percentage >= 75) return 'bg-blue-500'
+  if (percentage >= 50) return 'bg-yellow-500'
+  if (percentage >= 25) return 'bg-orange-500'
+  return 'bg-red-500'
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-gray-900">
+    <!-- Header - Modern & Sticky -->
+    <header class="sticky top-0 bg-gray-800/95 backdrop-blur-sm border-b border-gray-700 z-40">
+      <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <button @click="router.back()" class="btn btn-secondary">
+          <div class="flex items-center space-x-3">
+            <button @click="router.back()" class="btn btn-secondary text-sm">
               ← Back
             </button>
-            <h1 class="text-2xl font-bold text-primary-600">Necessity List</h1>
+            <h1 class="text-xl font-bold text-white">Shopping List</h1>
           </div>
           <div class="flex items-center space-x-2">
             <button
               @click="undo"
               :disabled="!historyStore.canUndo"
-              class="btn btn-secondary"
+              class="btn btn-secondary text-sm"
               :class="{ 'opacity-50 cursor-not-allowed': !historyStore.canUndo }"
             >
-              ↶ Undo
+              ↶
             </button>
             <button
               @click="redo"
               :disabled="!historyStore.canRedo"
-              class="btn btn-secondary"
+              class="btn btn-secondary text-sm"
               :class="{ 'opacity-50 cursor-not-allowed': !historyStore.canRedo }"
             >
-              ↷ Redo
+              ↷
             </button>
-            <button @click="editMode = !editMode" class="btn btn-secondary">
-              {{ editMode ? '✓ Done' : '✎ Edit' }}
+            <button @click="editMode = !editMode" class="btn btn-secondary text-sm">
+              {{ editMode ? '✓' : '✎' }}
             </button>
-            <button @click="openAddModal" class="btn btn-primary">
-              + Add Item
+            <button @click="openAddModal" class="btn btn-primary text-sm">
+              + Add
             </button>
           </div>
         </div>
@@ -237,16 +319,16 @@ async function quickAddTemplate(template: ProductTemplate) {
       <!-- Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div class="card">
-          <p class="text-sm text-gray-600">Total Items</p>
-          <p class="text-2xl font-bold text-primary-600">{{ necessityStore.activeItems.length }}</p>
+          <p class="text-sm text-gray-400">Total Items</p>
+          <p class="text-2xl font-bold text-white">{{ necessityStore.activeItems.length }}</p>
         </div>
         <div class="card">
-          <p class="text-sm text-gray-600">High Priority</p>
-          <p class="text-2xl font-bold text-red-600">{{ necessityStore.highPriorityItems.length }}</p>
+          <p class="text-sm text-gray-400">High Priority</p>
+          <p class="text-2xl font-bold text-red-400">{{ necessityStore.highPriorityItems.length }}</p>
         </div>
         <div class="card">
-          <p class="text-sm text-gray-600">Total Cost</p>
-          <p class="text-2xl font-bold text-green-600">${{ necessityStore.totalCost.toFixed(2) }}</p>
+          <p class="text-sm text-gray-400">Total Cost</p>
+          <p class="text-2xl font-bold text-green-400">${{ necessityStore.totalCost.toFixed(2) }}</p>
         </div>
       </div>
 
@@ -264,7 +346,7 @@ async function quickAddTemplate(template: ProductTemplate) {
           <option value="medium">Medium</option>
           <option value="low">Low</option>
         </select>
-        <label class="flex items-center gap-2 cursor-pointer">
+        <label class="flex items-center gap-2 cursor-pointer text-gray-300">
           <input type="checkbox" v-model="showCompleted" class="w-4 h-4" />
           <span class="text-sm font-medium">Show Completed</span>
         </label>
@@ -274,16 +356,16 @@ async function quickAddTemplate(template: ProductTemplate) {
       <div class="mb-6">
         <button
           @click="showQuickAdd = !showQuickAdd"
-          class="w-full flex items-center justify-between p-4 bg-white border-2 border-primary-200 rounded-lg hover:border-primary-400 transition-colors"
+          class="w-full flex items-center justify-between p-4 bg-gray-800 border-2 border-gray-700 rounded-lg hover:border-gray-600 transition-colors"
         >
           <div class="flex items-center gap-2">
             <span class="text-lg">⚡</span>
-            <span class="font-semibold text-primary-700">Quick Add Common Items</span>
+            <span class="font-semibold text-white">Quick Add Common Items</span>
           </div>
-          <span class="text-2xl text-primary-600">{{ showQuickAdd ? '−' : '+' }}</span>
+          <span class="text-2xl text-gray-400">{{ showQuickAdd ? '−' : '+' }}</span>
         </button>
 
-        <div v-if="showQuickAdd" class="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+        <div v-if="showQuickAdd" class="mt-4 p-4 bg-gray-800 border border-gray-700 rounded-lg">
           <!-- Category Filter for Templates -->
           <div class="mb-4">
             <select v-model="quickAddCategory" class="input">
@@ -300,11 +382,11 @@ async function quickAddTemplate(template: ProductTemplate) {
               v-for="template in filteredTemplates"
               :key="template.name"
               @click="quickAddTemplate(template)"
-              class="flex flex-col items-center justify-center p-3 border-2 border-gray-200 rounded-lg hover:border-primary-400 hover:bg-primary-50 transition-all group"
+              class="flex flex-col items-center justify-center p-3 border-2 border-gray-700 rounded-lg hover:border-gray-500 hover:bg-gray-700 transition-all group"
               :title="`Add ${template.name}`"
             >
               <span class="text-3xl mb-1">{{ template.icon }}</span>
-              <span class="text-xs font-medium text-center text-gray-700 group-hover:text-primary-700">
+              <span class="text-xs font-medium text-center text-gray-300 group-hover:text-white">
                 {{ template.name }}
               </span>
               <span class="text-xs text-gray-500 mt-1">
@@ -321,11 +403,11 @@ async function quickAddTemplate(template: ProductTemplate) {
 
       <!-- Items List -->
       <div v-if="necessityStore.loading" class="text-center py-12">
-        <p class="text-gray-600">Loading...</p>
+        <p class="text-gray-400">Loading...</p>
       </div>
 
       <div v-else-if="filteredItems.length === 0" class="text-center py-12">
-        <p class="text-gray-600">No items found. Add your first item to get started!</p>
+        <p class="text-gray-400">No items found. Add your first item to get started!</p>
       </div>
 
       <div v-else class="space-y-3">
@@ -335,77 +417,109 @@ async function quickAddTemplate(template: ProductTemplate) {
           class="card hover:shadow-md transition-shadow"
           :class="{ 'opacity-60': item.completed }"
         >
-          <div class="flex items-start gap-4">
-            <!-- Checkbox -->
-            <input
-              type="checkbox"
-              :checked="item.completed"
-              @change="toggleComplete(item)"
-              class="w-5 h-5 mt-1 cursor-pointer"
-            />
-
-            <!-- Content -->
-            <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between mb-2">
-                <div class="flex-1">
-                  <h3
-                    class="font-semibold text-lg"
-                    :class="{ 'line-through text-gray-500': item.completed }"
-                  >
-                    {{ item.name }}
-                  </h3>
-                  <div class="flex items-center gap-2 mt-1">
-                    <span :class="['px-2 py-1 text-xs font-medium rounded border', getPriorityColor(item.priority)]">
-                      {{ item.priority.toUpperCase() }}
-                    </span>
-                    <span v-if="item.category" class="text-sm text-gray-500">{{ item.category }}</span>
-                  </div>
-                </div>
-                <div v-if="editMode" class="flex gap-2 ml-4">
-                  <button @click="openEditModal(item)" class="text-primary-600 hover:text-primary-700">
-                    ✎
-                  </button>
-                  <button @click="deleteItem(item)" class="text-red-600 hover:text-red-700">
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              <div class="flex flex-wrap items-center gap-4 text-sm">
-                <span class="text-gray-600">
-                  Qty: <span class="font-medium">{{ item.quantity }}</span>
-                </span>
-                <span class="text-gray-600">
-                  Price: <span class="font-medium">{{ item.currency }} ${{ (item.price * item.quantity).toFixed(2) }}</span>
+          <!-- Header Row -->
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3
+                  class="font-semibold text-lg text-white"
+                  :class="{ 'line-through text-gray-500': item.completed }"
+                >
+                  {{ item.name }}
+                </h3>
+                <span v-if="(item.timesAddedToCart || 0) > 1" class="text-xs text-gray-500 bg-gray-700 px-2 py-0.5 rounded">
+                  {{ item.timesAddedToCart }}x added
                 </span>
               </div>
-
-              <!-- Links -->
-              <div v-if="item.productUrl || item.addToCartUrl" class="flex gap-3 mt-2">
-                <a
-                  v-if="item.productUrl"
-                  :href="item.productUrl"
-                  target="_blank"
-                  class="text-sm text-primary-600 hover:text-primary-700"
-                >
-                  🔗 View Product
-                </a>
-                <a
-                  v-if="item.addToCartUrl"
-                  :href="item.addToCartUrl"
-                  target="_blank"
-                  class="text-sm text-green-600 hover:text-green-700"
-                >
-                  🛒 Add to Cart
-                </a>
+              <div class="flex items-center gap-2">
+                <span :class="['px-2 py-1 text-xs font-medium rounded border', getPriorityColor(item.priority)]">
+                  {{ item.priority.toUpperCase() }}
+                </span>
+                <span v-if="item.category" class="text-sm text-gray-400">{{ item.category }}</span>
+                <span class="text-sm text-gray-400">
+                  {{ item.currency }} ${{ (item.price * item.quantity).toFixed(2) }}
+                </span>
               </div>
-
-              <!-- Notes -->
-              <p v-if="item.notes && editMode" class="text-sm text-gray-600 mt-2 pt-2 border-t">
-                {{ item.notes }}
-              </p>
+            </div>
+            <div v-if="editMode" class="flex gap-2 ml-4">
+              <button @click="openEditModal(item)" class="text-blue-400 hover:text-blue-300">
+                ✎
+              </button>
+              <button @click="deleteItem(item)" class="text-red-400 hover:text-red-300">
+                ✕
+              </button>
             </div>
           </div>
+
+          <!-- Progress Bar Section -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-400">
+                Progress: <span class="font-medium text-white">{{ item.acquiredQuantity || 0 }}/{{ item.quantity }}</span>
+              </span>
+              <span class="text-gray-400">{{ Math.round(getProgressPercentage(item)) }}%</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+              <div
+                :class="['h-full transition-all duration-300 rounded-full', getProgressColor(getProgressPercentage(item))]"
+                :style="{ width: `${getProgressPercentage(item)}%` }"
+              ></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2 mt-3">
+              <button
+                @click="handleDecrementAcquired(item)"
+                :disabled="(item.acquiredQuantity || 0) <= 0"
+                class="btn btn-secondary text-sm px-3 py-1"
+                :class="{ 'opacity-50 cursor-not-allowed': (item.acquiredQuantity || 0) <= 0 }"
+              >
+                −
+              </button>
+              <button
+                @click="handleIncrementAcquired(item)"
+                :disabled="(item.acquiredQuantity || 0) >= item.quantity"
+                class="btn btn-success text-sm px-3 py-1 flex-1"
+                :class="{ 'opacity-50 cursor-not-allowed': (item.acquiredQuantity || 0) >= item.quantity }"
+              >
+                Got 1 ✓
+              </button>
+              <button
+                @click="handleIncreaseTarget(item)"
+                class="btn btn-warning text-sm px-3 py-1"
+                title="Need more"
+              >
+                + Need More
+              </button>
+            </div>
+          </div>
+
+          <!-- Links -->
+          <div v-if="item.productUrl || item.addToCartUrl" class="flex gap-3 mt-3 pt-3 border-t border-gray-700">
+            <a
+              v-if="item.productUrl"
+              :href="item.productUrl"
+              target="_blank"
+              class="text-sm text-blue-400 hover:text-blue-300"
+            >
+              🔗 View Product
+            </a>
+            <a
+              v-if="item.addToCartUrl"
+              :href="item.addToCartUrl"
+              target="_blank"
+              class="text-sm text-green-400 hover:text-green-300"
+            >
+              🛒 Add to Cart
+            </a>
+          </div>
+
+          <!-- Notes -->
+          <p v-if="item.notes && editMode" class="text-sm text-gray-400 mt-3 pt-3 border-t border-gray-700">
+            {{ item.notes }}
+          </p>
         </div>
       </div>
     </main>
@@ -413,32 +527,32 @@ async function quickAddTemplate(template: ProductTemplate) {
     <!-- Add/Edit Modal -->
     <div
       v-if="showAddModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
     >
-      <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 class="text-2xl font-bold mb-4">
+      <div class="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+        <h2 class="text-2xl font-bold mb-4 text-white">
           {{ editingItem ? 'Edit Item' : 'Add New Item' }}
         </h2>
 
         <form @submit.prevent="saveItem" class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Name *</label>
               <input v-model="newItem.name" type="text" required class="input" />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Quantity *</label>
               <input v-model.number="newItem.quantity" type="number" min="1" required class="input" />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Unit Price *</label>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Unit Price *</label>
               <input v-model.number="newItem.price" type="number" min="0" step="0.01" required class="input" />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Currency</label>
               <select v-model="newItem.currency" class="input">
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -447,7 +561,7 @@ async function quickAddTemplate(template: ProductTemplate) {
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Priority *</label>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Priority *</label>
               <select v-model="newItem.priority" class="input">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -456,7 +570,7 @@ async function quickAddTemplate(template: ProductTemplate) {
             </div>
 
             <div class="sm:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Category</label>
               <input v-model="newItem.category" type="text" class="input" list="categories" />
               <datalist id="categories">
                 <option v-for="cat in categories" :key="cat" :value="cat" />
@@ -464,17 +578,17 @@ async function quickAddTemplate(template: ProductTemplate) {
             </div>
 
             <div class="sm:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Product URL</label>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Product URL</label>
               <input v-model="newItem.productUrl" type="url" class="input" placeholder="https://..." />
             </div>
 
             <div class="sm:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Add to Cart URL</label>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Add to Cart URL</label>
               <input v-model="newItem.addToCartUrl" type="url" class="input" placeholder="https://..." />
             </div>
 
             <div class="sm:col-span-2">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Notes</label>
               <textarea v-model="newItem.notes" class="input" rows="3"></textarea>
             </div>
           </div>
