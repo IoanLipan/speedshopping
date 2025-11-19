@@ -11,6 +11,7 @@ export interface SupplyItem {
   userId: string
   name: string
   quantity: number
+  unit?: string // Unit of measurement (e.g., kg, liters, pieces)
   dailyConsumption: number // How many units consumed per day
   daysRemaining: number // Auto-calculated
   price: number

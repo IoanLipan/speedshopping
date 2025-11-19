@@ -4,32 +4,104 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 text-gray-900 min-h-screen;
+    background-attachment: fixed;
   }
 }
 
 @layer components {
+  /* Game-style buttons - BIG and BOLD! */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95;
   }
 
   .btn-primary {
-    @apply bg-primary-500 text-white hover:bg-primary-600 active:bg-primary-700;
+    @apply bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400;
+    @apply bg-gradient-to-r from-blue-400 to-cyan-400 text-white hover:from-blue-500 hover:to-cyan-500;
   }
 
   .btn-danger {
-    @apply bg-red-500 text-white hover:bg-red-600 active:bg-red-700;
+    @apply bg-gradient-to-r from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600;
   }
 
+  .btn-success {
+    @apply bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600;
+  }
+
+  .btn-warning {
+    @apply bg-gradient-to-r from-yellow-400 to-orange-400 text-white hover:from-yellow-500 hover:to-orange-500;
+  }
+
+  /* Game-style cards with playful shadows */
   .card {
-    @apply bg-white rounded-xl shadow-sm p-4 border border-gray-100;
+    @apply bg-white rounded-3xl shadow-xl p-6 border-4 border-purple-200 hover:border-purple-400 transition-all duration-200 hover:shadow-2xl;
   }
 
+  .card-game {
+    @apply bg-gradient-to-br from-white to-purple-50 rounded-3xl shadow-xl p-6 border-4 border-transparent hover:border-purple-400 transition-all duration-200 hover:shadow-2xl hover:scale-105;
+  }
+
+  /* Input fields */
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-4 py-3 border-4 border-purple-300 rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-400 focus:border-purple-500 text-lg font-medium;
+  }
+
+  /* Stock meter styles */
+  .stock-meter {
+    @apply relative h-8 bg-gray-200 rounded-full overflow-hidden border-4 border-white shadow-inner;
+  }
+
+  .stock-meter-fill {
+    @apply h-full transition-all duration-500 ease-out;
+  }
+
+  .stock-meter-critical {
+    @apply bg-gradient-to-r from-red-500 to-red-600 animate-pulse;
+  }
+
+  .stock-meter-warning {
+    @apply bg-gradient-to-r from-orange-400 to-yellow-400;
+  }
+
+  .stock-meter-good {
+    @apply bg-gradient-to-r from-green-400 to-emerald-500;
+  }
+
+  .stock-meter-excellent {
+    @apply bg-gradient-to-r from-blue-400 to-cyan-400;
+  }
+
+  /* Badge styles for days remaining */
+  .days-badge {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-full font-bold text-lg shadow-lg;
+  }
+
+  .days-badge-critical {
+    @apply bg-gradient-to-r from-red-500 to-pink-500 text-white animate-bounce-slow;
+  }
+
+  .days-badge-warning {
+    @apply bg-gradient-to-r from-orange-400 to-yellow-400 text-white;
+  }
+
+  .days-badge-good {
+    @apply bg-gradient-to-r from-green-400 to-emerald-400 text-white;
+  }
+
+  .days-badge-excellent {
+    @apply bg-gradient-to-r from-blue-400 to-cyan-400 text-white;
+  }
+
+  /* Stats card for home page */
+  .stat-card {
+    @apply bg-gradient-to-br from-white to-purple-50 rounded-3xl shadow-2xl p-8 border-4 border-purple-300 hover:border-purple-500 transition-all duration-300 hover:scale-105 hover:shadow-purple-300;
+  }
+
+  /* Quick action cards */
+  .action-card {
+    @apply cursor-pointer bg-gradient-to-br rounded-3xl shadow-2xl p-8 text-white transition-all duration-300 hover:scale-110 hover:shadow-2xl border-4 border-white hover:border-yellow-300 active:scale-95;
   }
 }

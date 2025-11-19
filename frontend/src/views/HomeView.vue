@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSupplyStore } from '@/stores/supply'
 import { useNecessityStore } from '@/stores/necessity'
+import StockMeter from '@/components/StockMeter.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -17,6 +18,37 @@ const stats = computed(() => ({
   shoppingListCost: necessityStore.totalCost,
 }))
 
+// Get items sorted by days remaining for display
+const criticalItems = computed(() =>
+  supplyStore.items
+    .filter(item => item.daysRemaining <= item.lowStockThreshold)
+    .sort((a, b) => a.daysRemaining - b.daysRemaining)
+    .slice(0, 6) // Show top 6 critical items
+)
+
+const allItemsSorted = computed(() =>
+  supplyStore.items
+    .sort((a, b) => a.daysRemaining - b.daysRemaining)
+    .slice(0, 8) // Show top 8 items
+)
+
+// Get emoji from product templates if available
+function getItemEmoji(itemName: string): string {
+  const emojiMap: Record<string, string> = {
+    'eggs': '🥚', 'milk': '🥛', 'cheese': '🧀', 'bread': '🍞', 'butter': '🧈',
+    'coffee': '☕', 'pasta': '🍝', 'rice': '🍚', 'oil': '🫒',
+    'toilet paper': '🧻', 'sponge': '🧽', 'soap': '🧴', 'detergent': '🧼',
+    'shampoo': '🧴', 'toothpaste': '🪥', 'apple': '🍎', 'banana': '🍌',
+    'tomato': '🍅', 'potato': '🥔', 'onion': '🧅', 'carrot': '🥕'
+  }
+
+  const lowerName = itemName.toLowerCase()
+  for (const [key, emoji] of Object.entries(emojiMap)) {
+    if (lowerName.includes(key)) return emoji
+  }
+  return '📦'
+}
+
 onMounted(() => {
   supplyStore.fetchItems()
   necessityStore.fetchItems()
@@ -29,14 +61,17 @@ function logout() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen">
+    <!-- Game-style Header -->
+    <header class="bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 shadow-2xl">
+      <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between">
-          <h1 class="text-2xl font-bold text-primary-600">SpeedShopping</h1>
+          <div class="flex items-center gap-3">
+            <span class="text-5xl animate-bounce-slow">🛒</span>
+            <h1 class="text-4xl font-black text-white drop-shadow-lg">SpeedShopping</h1>
+          </div>
           <button @click="logout" class="btn btn-secondary">
-            Sign Out
+            👋 Sign Out
           </button>
         </div>
       </div>
@@ -44,139 +79,149 @@ function logout() {
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <!-- Welcome -->
-      <div class="mb-8">
-        <h2 class="text-3xl font-bold text-gray-900 mb-2">
-          Welcome back{{ authStore.user?.displayName ? ', ' + authStore.user.displayName : '' }}!
+      <!-- Welcome Banner -->
+      <div class="mb-8 bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 rounded-3xl shadow-2xl p-8 text-center border-4 border-white">
+        <h2 class="text-5xl font-black text-white mb-3 drop-shadow-lg animate-pulse-slow">
+          🎮 Welcome Back{{ authStore.user?.displayName ? ', ' + authStore.user.displayName : '' }}! 🎮
         </h2>
-        <p class="text-gray-600">Manage your inventory and shopping lists efficiently</p>
+        <p class="text-2xl font-bold text-white drop-shadow-md">Let's manage your inventory like a game!</p>
       </div>
 
-      <!-- Stats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="card">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Low Stock Items</p>
-              <p class="text-3xl font-bold text-red-600">{{ stats.lowStockCount }}</p>
-            </div>
-            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
+      <!-- Stats Grid - Big and Bold! -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div class="stat-card bg-gradient-to-br from-red-100 to-red-200">
+          <div class="text-center">
+            <div class="text-6xl mb-3">🚨</div>
+            <p class="text-lg font-bold text-red-800 mb-2">Low Stock Items</p>
+            <p class="text-6xl font-black text-red-600">{{ stats.lowStockCount }}</p>
           </div>
         </div>
 
-        <div class="card">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Necessity List</p>
-              <p class="text-3xl font-bold text-purple-600">{{ stats.necessityCount }}</p>
-            </div>
-            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
+        <div class="stat-card bg-gradient-to-br from-purple-100 to-purple-200">
+          <div class="text-center">
+            <div class="text-6xl mb-3">📋</div>
+            <p class="text-lg font-bold text-purple-800 mb-2">To Buy</p>
+            <p class="text-6xl font-black text-purple-600">{{ stats.necessityCount }}</p>
           </div>
         </div>
 
-        <div class="card">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Inventory Value</p>
-              <p class="text-3xl font-bold text-green-600">${{ stats.totalInventoryValue.toFixed(2) }}</p>
-            </div>
-            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
+        <div class="stat-card bg-gradient-to-br from-green-100 to-green-200">
+          <div class="text-center">
+            <div class="text-6xl mb-3">💰</div>
+            <p class="text-lg font-bold text-green-800 mb-2">Inventory Value</p>
+            <p class="text-4xl font-black text-green-600">${{ stats.totalInventoryValue.toFixed(2) }}</p>
           </div>
         </div>
 
-        <div class="card">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-600">Necessity Cost</p>
-              <p class="text-3xl font-bold text-purple-600">${{ stats.shoppingListCost.toFixed(2) }}</p>
-            </div>
-            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
+        <div class="stat-card bg-gradient-to-br from-blue-100 to-cyan-200">
+          <div class="text-center">
+            <div class="text-6xl mb-3">🛍️</div>
+            <p class="text-lg font-bold text-blue-800 mb-2">Shopping Cost</p>
+            <p class="text-4xl font-black text-blue-600">${{ stats.shoppingListCost.toFixed(2) }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <router-link to="/supply" class="card hover:shadow-md transition-shadow">
-          <div class="text-center py-4">
-            <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <h3 class="font-semibold text-gray-900">Supply List</h3>
-            <p class="text-sm text-gray-600">Manage your inventory</p>
-          </div>
-        </router-link>
+      <!-- Stock Level Dashboard - The Star of the Show! -->
+      <div v-if="criticalItems.length > 0" class="mb-12">
+        <div class="bg-gradient-to-r from-red-500 to-orange-500 rounded-3xl shadow-2xl p-8 border-4 border-white mb-6">
+          <h2 class="text-4xl font-black text-white mb-2 text-center flex items-center justify-center gap-3">
+            <span class="text-5xl animate-bounce">⚡</span>
+            CRITICAL ITEMS - ORDER NOW!
+            <span class="text-5xl animate-bounce">⚡</span>
+          </h2>
+          <p class="text-xl font-bold text-white text-center">These items need your attention immediately!</p>
+        </div>
 
-        <router-link to="/necessity" class="card hover:shadow-md transition-shadow">
-          <div class="text-center py-4">
-            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <h3 class="font-semibold text-gray-900">Necessity List</h3>
-            <p class="text-sm text-gray-600">Track what you need</p>
-          </div>
-        </router-link>
-
-        <router-link to="/analytics" class="card hover:shadow-md transition-shadow">
-          <div class="text-center py-4">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h3 class="font-semibold text-gray-900">Analytics</h3>
-            <p class="text-sm text-gray-600">View spending insights</p>
-          </div>
-        </router-link>
-
-        <router-link to="/settings" class="card hover:shadow-md transition-shadow">
-          <div class="text-center py-4">
-            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <h3 class="font-semibold text-gray-900">Settings</h3>
-            <p class="text-sm text-gray-600">Configure your account</p>
-          </div>
-        </router-link>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <StockMeter
+            v-for="item in criticalItems"
+            :key="item.id"
+            :item-name="item.name"
+            :days-remaining="item.daysRemaining"
+            :low-stock-threshold="item.lowStockThreshold"
+            :quantity="item.quantity"
+            :daily-consumption="item.dailyConsumption"
+            :unit="item.unit || 'units'"
+            :emoji="getItemEmoji(item.name)"
+          />
+        </div>
       </div>
 
-      <!-- Low Stock Alert -->
-      <div v-if="stats.lowStockCount > 0" class="mt-8 card bg-red-50 border-red-200">
-        <div class="flex items-start">
-          <svg class="w-6 h-6 text-red-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <div class="flex-1">
-            <h3 class="font-semibold text-red-900 mb-1">Low Stock Alert</h3>
-            <p class="text-red-700">You have {{ stats.lowStockCount }} item{{ stats.lowStockCount > 1 ? 's' : '' }} running low. Check your supply list to restock.</p>
-            <router-link to="/supply" class="inline-block mt-2 text-red-600 hover:text-red-700 font-medium">
-              View Supply List →
-            </router-link>
-          </div>
+      <!-- All Items Stock Overview -->
+      <div v-if="allItemsSorted.length > 0" class="mb-12">
+        <div class="bg-gradient-to-r from-purple-500 to-blue-500 rounded-3xl shadow-2xl p-6 border-4 border-white mb-6">
+          <h2 class="text-3xl font-black text-white text-center flex items-center justify-center gap-3">
+            <span class="text-4xl">📊</span>
+            Your Inventory at a Glance
+            <span class="text-4xl">📊</span>
+          </h2>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StockMeter
+            v-for="item in allItemsSorted"
+            :key="item.id"
+            :item-name="item.name"
+            :days-remaining="item.daysRemaining"
+            :low-stock-threshold="item.lowStockThreshold"
+            :quantity="item.quantity"
+            :daily-consumption="item.dailyConsumption"
+            :unit="item.unit || 'units'"
+            :emoji="getItemEmoji(item.name)"
+          />
+        </div>
+      </div>
+
+      <!-- Quick Actions - BIG GAME BUTTONS! -->
+      <div class="mb-8">
+        <div class="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-3xl shadow-2xl p-6 border-4 border-white mb-6">
+          <h2 class="text-3xl font-black text-white text-center">🎯 Quick Actions 🎯</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <router-link to="/supply" class="action-card from-purple-500 to-pink-500">
+            <div class="text-center">
+              <div class="text-7xl mb-4">📦</div>
+              <h3 class="text-2xl font-black mb-2">Supply List</h3>
+              <p class="text-lg font-bold">Manage your inventory</p>
+            </div>
+          </router-link>
+
+          <router-link to="/necessity" class="action-card from-blue-500 to-cyan-500">
+            <div class="text-center">
+              <div class="text-7xl mb-4">✅</div>
+              <h3 class="text-2xl font-black mb-2">Shopping List</h3>
+              <p class="text-lg font-bold">Track what to buy</p>
+            </div>
+          </router-link>
+
+          <router-link to="/analytics" class="action-card from-green-500 to-emerald-500">
+            <div class="text-center">
+              <div class="text-7xl mb-4">📈</div>
+              <h3 class="text-2xl font-black mb-2">Analytics</h3>
+              <p class="text-lg font-bold">View your stats</p>
+            </div>
+          </router-link>
+
+          <router-link to="/settings" class="action-card from-orange-500 to-red-500">
+            <div class="text-center">
+              <div class="text-7xl mb-4">⚙️</div>
+              <h3 class="text-2xl font-black mb-2">Settings</h3>
+              <p class="text-lg font-bold">Configure account</p>
+            </div>
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="supplyStore.items.length === 0" class="text-center py-12">
+        <div class="text-8xl mb-6 animate-bounce">🎮</div>
+        <h3 class="text-3xl font-black text-white mb-4 drop-shadow-lg">Ready to Start Your Inventory Adventure?</h3>
+        <p class="text-xl font-bold text-white mb-8 drop-shadow">Add your first items to start tracking!</p>
+        <router-link to="/supply" class="btn btn-primary text-2xl">
+          🚀 Let's Go!
+        </router-link>
       </div>
     </main>
   </div>
