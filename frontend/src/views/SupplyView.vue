@@ -6,6 +6,20 @@ import { useHistoryStore } from '@/stores/history'
 import type { SupplyItem } from '@/types'
 import { supplyItemTemplates, getTemplatesByCategory, getTemplateCategories, type ProductTemplate } from '@/data/productTemplates'
 import StockMeter from '@/components/StockMeter.vue'
+import {
+  ArrowLeft,
+  RotateCcw,
+  RotateCw,
+  Edit3,
+  Plus,
+  Search,
+  Filter,
+  Zap,
+  Edit,
+  Trash2,
+  ExternalLink,
+  ShoppingCart as CartIcon
+} from 'lucide-vue-next'
 
 const router = useRouter()
 const supplyStore = useSupplyStore()
@@ -77,20 +91,13 @@ onMounted(() => {
   historyStore.updateCanUndoRedo()
 })
 
-function getItemEmoji(itemName: string): string {
-  const emojiMap: Record<string, string> = {
-    'eggs': '🥚', 'milk': '🥛', 'cheese': '🧀', 'bread': '🍞', 'butter': '🧈',
-    'coffee': '☕', 'pasta': '🍝', 'rice': '🍚', 'oil': '🫒',
-    'toilet paper': '🧻', 'sponge': '🧽', 'soap': '🧴', 'detergent': '🧼',
-    'shampoo': '🧴', 'toothpaste': '🪥', 'apple': '🍎', 'banana': '🍌',
-    'tomato': '🍅', 'potato': '🥔', 'onion': '🧅', 'carrot': '🥕'
-  }
-
+function getItemIcon(itemName: string): string {
   const lowerName = itemName.toLowerCase()
-  for (const [key, emoji] of Object.entries(emojiMap)) {
-    if (lowerName.includes(key)) return emoji
-  }
-  return '📦'
+  if (lowerName.includes('egg')) return 'egg'
+  if (lowerName.includes('milk')) return 'milk'
+  if (lowerName.includes('coffee')) return 'coffee'
+  if (lowerName.includes('bread')) return 'bread'
+  return 'package'
 }
 
 function openAddModal() {
@@ -195,41 +202,41 @@ async function quickAddTemplate(template: ProductTemplate) {
 
 <template>
   <div class="min-h-screen">
-    <!-- Game-style Header -->
-    <header class="bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 shadow-2xl">
-      <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+    <!-- Minimalist Header -->
+    <header class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-4">
-            <button @click="router.back()" class="btn btn-secondary text-base px-6 py-3">
-              ⬅️ Back
+            <button @click="router.back()" class="btn btn-secondary flex items-center gap-2">
+              <ArrowLeft :size="16" />
+              <span>Back</span>
             </button>
-            <div class="flex items-center gap-3">
-              <span class="text-5xl">📦</span>
-              <h1 class="text-4xl font-black text-white drop-shadow-lg">Supply Inventory</h1>
-            </div>
+            <h1 class="text-xl font-semibold text-gray-900">Supply Inventory</h1>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <button
               @click="undo"
               :disabled="!historyStore.canUndo"
-              class="btn btn-secondary text-sm px-4 py-2"
+              class="btn btn-secondary"
               :class="{ 'opacity-50 cursor-not-allowed': !historyStore.canUndo }"
             >
-              ↶ Undo
+              <RotateCcw :size="16" />
             </button>
             <button
               @click="redo"
               :disabled="!historyStore.canRedo"
-              class="btn btn-secondary text-sm px-4 py-2"
+              class="btn btn-secondary"
               :class="{ 'opacity-50 cursor-not-allowed': !historyStore.canRedo }"
             >
-              ↷ Redo
+              <RotateCw :size="16" />
             </button>
-            <button @click="editMode = !editMode" class="btn btn-warning text-base px-6 py-3">
-              {{ editMode ? '✓ Done' : '✎ Edit Mode' }}
+            <button @click="editMode = !editMode" class="btn btn-warning flex items-center gap-2">
+              <Edit3 :size="16" />
+              <span>{{ editMode ? 'Done' : 'Edit' }}</span>
             </button>
-            <button @click="openAddModal" class="btn btn-success text-base px-6 py-3">
-              ➕ Add Item
+            <button @click="openAddModal" class="btn btn-success flex items-center gap-2">
+              <Plus :size="16" />
+              <span>Add Item</span>
             </button>
           </div>
         </div>
@@ -237,106 +244,116 @@ async function quickAddTemplate(template: ProductTemplate) {
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
       <!-- Filters -->
-      <div class="mb-8 flex flex-col sm:flex-row gap-4">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="🔍 Search items..."
-          class="input flex-1 text-lg"
-        />
-        <select v-model="filterCategory" class="input sm:w-64 text-lg font-bold">
-          <option value="all">📂 All Categories</option>
-          <option v-for="cat in categories" :key="cat" :value="cat">
-            📁 {{ cat }}
-          </option>
-        </select>
+      <div class="mb-6 flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <Search :size="18" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search items..."
+            class="input pl-10"
+          />
+        </div>
+        <div class="relative sm:w-48">
+          <Filter :size="18" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <select v-model="filterCategory" class="input pl-10">
+            <option value="all">All Categories</option>
+            <option v-for="cat in categories" :key="cat" :value="cat">
+              {{ cat }}
+            </option>
+          </select>
+        </div>
       </div>
 
       <!-- Quick Add Section -->
-      <div class="mb-8">
+      <div class="mb-6">
         <button
           @click="showQuickAdd = !showQuickAdd"
-          class="w-full flex items-center justify-between p-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-3xl shadow-2xl border-4 border-white hover:shadow-purple-400 transition-all hover:scale-105"
+          class="w-full flex items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl hover:border-gray-300 transition-all"
         >
-          <div class="flex items-center gap-3">
-            <span class="text-4xl">⚡</span>
-            <span class="text-2xl font-black text-white drop-shadow-lg">Quick Add Common Items</span>
+          <div class="flex items-center gap-2">
+            <Zap :size="18" class="text-gray-700" />
+            <span class="text-sm font-medium text-gray-900">Quick Add Common Items</span>
           </div>
-          <span class="text-4xl text-white font-black">{{ showQuickAdd ? '−' : '+' }}</span>
+          <span class="text-gray-500">{{ showQuickAdd ? '−' : '+' }}</span>
         </button>
 
-        <div v-if="showQuickAdd" class="mt-6 p-6 bg-white rounded-3xl shadow-2xl border-4 border-purple-300">
+        <div v-if="showQuickAdd" class="mt-3 p-4 bg-white border border-gray-200 rounded-2xl">
           <!-- Category Filter for Templates -->
-          <div class="mb-6">
-            <select v-model="quickAddCategory" class="input text-lg font-bold">
-              <option value="all">🎯 All Categories</option>
+          <div class="mb-4">
+            <select v-model="quickAddCategory" class="input">
+              <option value="all">All Categories</option>
               <option v-for="cat in templateCategories" :key="cat" :value="cat">
-                📁 {{ cat }}
+                {{ cat }}
               </option>
             </select>
           </div>
 
           <!-- Template Items Grid -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <button
               v-for="template in filteredTemplates"
               :key="template.name"
               @click="quickAddTemplate(template)"
-              class="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 border-4 border-purple-200 rounded-2xl hover:border-purple-500 hover:shadow-xl hover:scale-110 transition-all group"
+              class="flex flex-col items-center justify-center p-3 bg-gray-50 border border-gray-200 rounded-xl hover:border-gray-900 hover:bg-gray-100 transition-all group"
               :title="`Add ${template.name}`"
             >
-              <span class="text-5xl mb-2 group-hover:animate-bounce">{{ template.icon }}</span>
-              <span class="text-sm font-bold text-center text-gray-800 group-hover:text-purple-700">
+              <span class="text-3xl mb-1">{{ template.icon }}</span>
+              <span class="text-xs font-medium text-center text-gray-800">
                 {{ template.name }}
               </span>
-              <span class="text-xs text-gray-600 font-medium mt-1">
+              <span class="text-xs text-gray-500 mt-0.5">
                 {{ template.defaultQuantity }} {{ template.unit }}
               </span>
             </button>
           </div>
 
-          <p class="text-sm text-gray-600 font-bold mt-6 text-center bg-yellow-100 p-3 rounded-2xl">
-            ✨ Click any item to instantly add it! You can customize it later.
+          <p class="text-xs text-gray-600 mt-4 text-center bg-gray-50 p-2 rounded-xl">
+            Click any item to add it. You can customize later.
           </p>
         </div>
       </div>
 
       <!-- Items List -->
       <div v-if="supplyStore.loading" class="text-center py-16">
-        <div class="text-8xl mb-6 animate-bounce">⏳</div>
-        <p class="text-2xl font-black text-white drop-shadow-lg">Loading your awesome inventory...</p>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-gray-900 mb-4"></div>
+        <p class="text-base text-gray-600">Loading inventory...</p>
       </div>
 
       <div v-else-if="filteredItems.length === 0" class="text-center py-16">
-        <div class="text-8xl mb-6 animate-bounce">📦</div>
-        <h3 class="text-3xl font-black text-white mb-4 drop-shadow-lg">No Items Found!</h3>
-        <p class="text-xl font-bold text-white mb-8 drop-shadow">Start adding items to track your inventory!</p>
-        <button @click="openAddModal" class="btn btn-success text-2xl">
-          ➕ Add Your First Item
+        <div class="text-gray-400 mb-4">
+          <svg class="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">No Items Found</h3>
+        <p class="text-sm text-gray-600 mb-6">Start adding items to track your inventory</p>
+        <button @click="openAddModal" class="btn btn-success">
+          Add Your First Item
         </button>
       </div>
 
       <div v-else>
         <!-- Stock Meters Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div v-for="item in filteredItems" :key="item.id" class="relative">
             <!-- Edit/Delete Buttons Overlay -->
-            <div v-if="editMode" class="absolute top-3 right-3 z-10 flex gap-2 bg-white rounded-full p-2 shadow-lg border-2 border-purple-300">
+            <div v-if="editMode" class="absolute top-2 right-2 z-10 flex gap-1 bg-white rounded-lg p-1 shadow-sm border border-gray-200">
               <button
                 @click="openEditModal(item)"
-                class="text-2xl text-blue-600 hover:text-blue-700 hover:scale-125 transition-transform"
+                class="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                 title="Edit"
               >
-                ✏️
+                <Edit :size="16" />
               </button>
               <button
                 @click="deleteItem(item)"
-                class="text-2xl text-red-600 hover:text-red-700 hover:scale-125 transition-transform"
+                class="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
                 title="Delete"
               >
-                🗑️
+                <Trash2 :size="16" />
               </button>
             </div>
 
@@ -348,47 +365,48 @@ async function quickAddTemplate(template: ProductTemplate) {
               :quantity="item.quantity"
               :daily-consumption="item.dailyConsumption"
               :unit="item.unit || 'units'"
-              :emoji="getItemEmoji(item.name)"
+              :icon="getItemIcon(item.name)"
             />
 
             <!-- Additional Info Card -->
-            <div class="mt-2 bg-white rounded-2xl p-4 shadow-lg border-2 border-purple-200">
+            <div class="mt-2 bg-white rounded-2xl p-3 border border-gray-200">
               <div class="space-y-2">
                 <!-- Category -->
                 <div v-if="item.category" class="flex items-center gap-2">
-                  <span class="text-lg">📁</span>
-                  <span class="text-sm font-bold text-purple-700">{{ item.category }}</span>
+                  <span class="text-xs font-medium text-gray-500">{{ item.category }}</span>
                 </div>
 
                 <!-- Price -->
                 <div class="flex items-center justify-between">
-                  <span class="text-sm font-bold text-gray-700">💰 Price:</span>
-                  <span class="font-bold text-green-600">{{ item.currency }} ${{ item.price.toFixed(2) }}</span>
+                  <span class="text-xs text-gray-600">Price:</span>
+                  <span class="text-sm font-medium text-gray-900">{{ item.currency }} ${{ item.price.toFixed(2) }}</span>
                 </div>
 
                 <!-- Links -->
-                <div v-if="item.productUrl || item.addToCartUrl" class="pt-2 border-t-2 border-purple-200 space-y-2">
+                <div v-if="item.productUrl || item.addToCartUrl" class="pt-2 border-t border-gray-200 space-y-2">
                   <a
                     v-if="item.productUrl"
                     :href="item.productUrl"
                     target="_blank"
-                    class="block text-center py-2 px-4 bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold rounded-xl hover:from-blue-500 hover:to-cyan-500 transition-all hover:scale-105 shadow-lg"
+                    class="flex items-center justify-center gap-1 py-2 px-3 bg-gray-100 text-gray-900 text-xs font-medium rounded-lg hover:bg-gray-200 transition-all"
                   >
-                    🔗 View Product
+                    <ExternalLink :size="14" />
+                    <span>View Product</span>
                   </a>
                   <a
                     v-if="item.addToCartUrl"
                     :href="item.addToCartUrl"
                     target="_blank"
-                    class="block text-center py-2 px-4 bg-gradient-to-r from-green-400 to-emerald-400 text-white font-bold rounded-xl hover:from-green-500 hover:to-emerald-500 transition-all hover:scale-105 shadow-lg"
+                    class="flex items-center justify-center gap-1 py-2 px-3 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-all"
                   >
-                    🛒 Add to Cart
+                    <CartIcon :size="14" />
+                    <span>Add to Cart</span>
                   </a>
                 </div>
 
                 <!-- Notes -->
-                <p v-if="item.notes" class="text-sm text-gray-700 pt-2 border-t-2 border-purple-200 bg-yellow-50 p-3 rounded-xl">
-                  <span class="font-bold">📝 Note:</span> {{ item.notes }}
+                <p v-if="item.notes" class="text-xs text-gray-600 pt-2 border-t border-gray-200 bg-gray-50 p-2 rounded-lg">
+                  {{ item.notes }}
                 </p>
               </div>
             </div>
@@ -400,49 +418,48 @@ async function quickAddTemplate(template: ProductTemplate) {
     <!-- Add/Edit Modal -->
     <div
       v-if="showAddModal"
-      class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
     >
-      <div class="bg-gradient-to-br from-white to-purple-50 rounded-3xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto border-4 border-purple-400 shadow-2xl">
-        <div class="flex items-center justify-center gap-3 mb-6">
-          <span class="text-5xl">{{ editingItem ? '✏️' : '➕' }}</span>
-          <h2 class="text-4xl font-black text-purple-700">
+      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold text-gray-900">
             {{ editingItem ? 'Edit Item' : 'Add New Item' }}
           </h2>
         </div>
 
-        <form @submit.prevent="saveItem" class="space-y-6">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <form @submit.prevent="saveItem" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="sm:col-span-2">
-              <label class="block text-base font-black text-purple-700 mb-2">📝 Item Name *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Item Name *</label>
               <input v-model="newItem.name" type="text" required class="input" placeholder="e.g., Milk, Eggs, etc." />
             </div>
 
             <div>
-              <label class="block text-base font-black text-purple-700 mb-2">📦 Quantity *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Quantity *</label>
               <input v-model.number="newItem.quantity" type="number" min="0" step="0.1" required class="input" />
             </div>
 
             <div>
-              <label class="block text-base font-black text-purple-700 mb-2">📉 Daily Use *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Daily Use *</label>
               <input v-model.number="newItem.dailyConsumption" type="number" min="0" step="0.1" required class="input" />
             </div>
 
             <div>
-              <label class="block text-base font-black text-purple-700 mb-2">💰 Price *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Price *</label>
               <input v-model.number="newItem.price" type="number" min="0" step="0.01" required class="input" />
             </div>
 
             <div>
-              <label class="block text-base font-black text-purple-700 mb-2">💵 Currency</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Currency</label>
               <select v-model="newItem.currency" class="input">
-                <option value="USD">💵 USD</option>
-                <option value="EUR">💶 EUR</option>
-                <option value="GBP">💷 GBP</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-base font-black text-purple-700 mb-2">📁 Category</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
               <input v-model="newItem.category" type="text" class="input" list="categories" placeholder="e.g., Food, Household" />
               <datalist id="categories">
                 <option v-for="cat in categories" :key="cat" :value="cat" />
@@ -450,32 +467,32 @@ async function quickAddTemplate(template: ProductTemplate) {
             </div>
 
             <div>
-              <label class="block text-base font-black text-purple-700 mb-2">🚨 Low Stock Alert (days)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Low Stock Alert (days)</label>
               <input v-model.number="newItem.lowStockThreshold" type="number" min="1" class="input" />
             </div>
 
             <div class="sm:col-span-2">
-              <label class="block text-base font-black text-purple-700 mb-2">🔗 Product URL</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Product URL</label>
               <input v-model="newItem.productUrl" type="url" class="input" placeholder="https://..." />
             </div>
 
             <div class="sm:col-span-2">
-              <label class="block text-base font-black text-purple-700 mb-2">🛒 Add to Cart URL</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Add to Cart URL</label>
               <input v-model="newItem.addToCartUrl" type="url" class="input" placeholder="https://..." />
             </div>
 
             <div class="sm:col-span-2">
-              <label class="block text-base font-black text-purple-700 mb-2">📝 Notes</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Notes</label>
               <textarea v-model="newItem.notes" class="input" rows="3" placeholder="Any additional information..."></textarea>
             </div>
           </div>
 
-          <div class="flex gap-4 pt-6">
-            <button type="submit" class="btn btn-success flex-1 text-xl">
-              {{ editingItem ? '✅ Update Item' : '➕ Add Item' }}
+          <div class="flex gap-3 pt-4">
+            <button type="submit" class="btn btn-primary flex-1">
+              {{ editingItem ? 'Update Item' : 'Add Item' }}
             </button>
-            <button type="button" @click="closeModal" class="btn btn-danger flex-1 text-xl">
-              ❌ Cancel
+            <button type="button" @click="closeModal" class="btn btn-secondary flex-1">
+              Cancel
             </button>
           </div>
         </form>
