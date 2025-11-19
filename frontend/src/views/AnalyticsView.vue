@@ -35,23 +35,18 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-900 flex flex-col">
     <!-- Header -->
-    <header class="bg-white border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+    <header class="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
+      <div class="px-4 py-4">
         <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <button @click="router.back()" class="btn btn-secondary">
-              ← Back
-            </button>
-            <h1 class="text-2xl font-bold text-primary-600">Spending Analytics</h1>
-          </div>
+          <h1 class="text-xl font-semibold text-gray-100">Analytics</h1>
         </div>
       </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <main class="flex-1 overflow-y-auto px-4 py-6">
       <!-- Period Selector -->
       <div class="mb-6 flex gap-2">
         <button
@@ -81,29 +76,29 @@ onMounted(() => {
       </div>
 
       <!-- Overview -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="grid grid-cols-2 gap-3 mb-8">
         <div class="card">
-          <p class="text-sm text-gray-600 mb-1">Daily Spending</p>
-          <p class="text-3xl font-bold text-primary-600">${{ analytics.daily.toFixed(2) }}</p>
+          <p class="text-xs text-gray-400 mb-1">Daily</p>
+          <p class="text-2xl font-bold text-gray-100">${{ analytics.daily.toFixed(2) }}</p>
         </div>
         <div class="card">
-          <p class="text-sm text-gray-600 mb-1">Weekly Spending</p>
-          <p class="text-3xl font-bold text-primary-600">${{ analytics.weekly.toFixed(2) }}</p>
+          <p class="text-xs text-gray-400 mb-1">Weekly</p>
+          <p class="text-2xl font-bold text-gray-100">${{ analytics.weekly.toFixed(2) }}</p>
         </div>
         <div class="card">
-          <p class="text-sm text-gray-600 mb-1">Monthly Spending</p>
-          <p class="text-3xl font-bold text-primary-600">${{ analytics.monthly.toFixed(2) }}</p>
+          <p class="text-xs text-gray-400 mb-1">Monthly</p>
+          <p class="text-2xl font-bold text-gray-100">${{ analytics.monthly.toFixed(2) }}</p>
         </div>
         <div class="card">
-          <p class="text-sm text-gray-600 mb-1">Yearly Spending</p>
-          <p class="text-3xl font-bold text-primary-600">${{ analytics.yearly.toFixed(2) }}</p>
+          <p class="text-xs text-gray-400 mb-1">Yearly</p>
+          <p class="text-2xl font-bold text-gray-100">${{ analytics.yearly.toFixed(2) }}</p>
         </div>
       </div>
 
       <!-- By Category -->
       <div class="card mb-8">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">Spending by Category</h2>
-        <div v-if="Object.keys(analytics.byCategory).length === 0" class="text-center py-8 text-gray-500">
+        <h2 class="text-lg font-semibold text-gray-100 mb-4">Spending by Category</h2>
+        <div v-if="Object.keys(analytics.byCategory).length === 0" class="text-center py-8 text-gray-400">
           No category data available yet. Start tracking items to see analytics!
         </div>
         <div v-else class="space-y-3">
@@ -114,12 +109,12 @@ onMounted(() => {
           >
             <div class="flex-1">
               <div class="flex items-center justify-between mb-1">
-                <span class="font-medium text-gray-900">{{ category }}</span>
-                <span class="font-semibold text-primary-600">${{ amount.toFixed(2) }}</span>
+                <span class="font-medium text-gray-100">{{ category }}</span>
+                <span class="font-semibold text-blue-400">${{ amount.toFixed(2) }}</span>
               </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="w-full bg-gray-700 rounded-full h-2">
                 <div
-                  class="bg-primary-500 h-2 rounded-full"
+                  class="bg-blue-500 h-2 rounded-full"
                   :style="{ width: `${analytics.monthly > 0 ? (amount / analytics.monthly) * 100 : 0}%` }"
                 ></div>
               </div>
@@ -130,8 +125,8 @@ onMounted(() => {
 
       <!-- By Item -->
       <div class="card">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">Top Items by Spending</h2>
-        <div v-if="Object.keys(analytics.byItem).length === 0" class="text-center py-8 text-gray-500">
+        <h2 class="text-lg font-semibold text-gray-100 mb-4">Top Items by Spending</h2>
+        <div v-if="Object.keys(analytics.byItem).length === 0" class="text-center py-8 text-gray-400">
           No item data available yet. Start tracking items to see analytics!
         </div>
         <div v-else class="space-y-3">
@@ -142,10 +137,10 @@ onMounted(() => {
           >
             <div class="flex-1">
               <div class="flex items-center justify-between mb-1">
-                <span class="font-medium text-gray-900">{{ item }}</span>
-                <span class="font-semibold text-primary-600">${{ amount.toFixed(2) }}</span>
+                <span class="font-medium text-gray-100">{{ item }}</span>
+                <span class="font-semibold text-green-400">${{ amount.toFixed(2) }}</span>
               </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="w-full bg-gray-700 rounded-full h-2">
                 <div
                   class="bg-green-500 h-2 rounded-full"
                   :style="{ width: `${analytics.monthly > 0 ? (amount / analytics.monthly) * 100 : 0}%` }"
