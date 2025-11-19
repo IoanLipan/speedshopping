@@ -118,7 +118,7 @@ const getTextColor = () => {
   @apply bg-gray-800 rounded-2xl p-4 border border-gray-700;
   @apply flex items-center gap-4;
   @apply hover:border-gray-600 transition-all duration-150;
-  @apply active:scale-98;
+  @apply active:scale-95;
 }
 
 .item-icon {

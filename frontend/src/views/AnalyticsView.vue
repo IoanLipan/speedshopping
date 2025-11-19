@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { analyticsService } from '@/services/api'
 import type { SpendingAnalytics } from '@/types'
 
-const router = useRouter()
 const period = ref<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly')
 const loading = ref(false)
 

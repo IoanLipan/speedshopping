@@ -1,25 +1,18 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSupplyStore } from '@/stores/supply'
 import { useNecessityStore } from '@/stores/necessity'
-import StockMeter from '@/components/StockMeter.vue'
 import ItemListRow from '@/components/ItemListRow.vue'
 import {
   ShoppingCart,
-  LogOut,
   AlertTriangle,
   ClipboardList,
   Wallet,
   ShoppingBag,
-  Package,
-  CheckCircle,
-  TrendingUp,
-  Settings
+  Package
 } from 'lucide-vue-next'
 
-const router = useRouter()
 const authStore = useAuthStore()
 const supplyStore = useSupplyStore()
 const necessityStore = useNecessityStore()
@@ -45,26 +38,10 @@ const allItemsSorted = computed(() =>
     .slice(0, 8) // Show top 8 items
 )
 
-// Get icon name from product templates if available
-function getItemIcon(itemName: string): string {
-  const lowerName = itemName.toLowerCase()
-  // Return icon names that will be mapped to Lucide icons in the component
-  if (lowerName.includes('egg')) return 'egg'
-  if (lowerName.includes('milk')) return 'milk'
-  if (lowerName.includes('coffee')) return 'coffee'
-  if (lowerName.includes('bread')) return 'bread'
-  return 'package'
-}
-
 onMounted(() => {
   supplyStore.fetchItems()
   necessityStore.fetchItems()
 })
-
-function logout() {
-  authStore.logout()
-  router.push('/login')
-}
 </script>
 
 <template>
