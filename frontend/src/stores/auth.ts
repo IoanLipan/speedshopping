@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User } from '@/types'
 import { supabase } from '@/services/supabase'
+import { defaultNecessities } from '@/data/defaultNecessities'
+import { useNecessityStore } from './necessity'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -57,11 +59,37 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function register(email: string, password: string) {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       })
       if (error) throw error
+
+      // Add default household necessities for new users
+      if (data.user) {
+        const necessityStore = useNecessityStore()
+
+        // Wait a bit for the user session to be fully established
+        setTimeout(async () => {
+          for (const item of defaultNecessities) {
+            try {
+              await necessityStore.addItem({
+                name: item.name,
+                category: item.category,
+                quantity: item.quantity,
+                priority: item.priority,
+                notes: item.notes,
+                price: 0,
+                currency: 'USD',
+                productUrl: '',
+                addToCartUrl: '',
+              })
+            } catch (err) {
+              console.error(`Failed to add default item ${item.name}:`, err)
+            }
+          }
+        }, 2000)
+      }
     } catch (error: any) {
       throw new Error(error.message)
     }

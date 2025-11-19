@@ -84,7 +84,7 @@
           :disabled="(item.acquiredQuantity || 0) <= 0"
           class="action-btn action-btn-minus"
         >
-          <Minus :size="16" />
+          <Minus :size="20" />
         </button>
 
         <button
@@ -92,7 +92,7 @@
           :disabled="(item.acquiredQuantity || 0) >= item.quantity"
           class="action-btn action-btn-check"
         >
-          <Check :size="16" />
+          <Check :size="20" />
           <span>Got 1</span>
         </button>
 
@@ -100,7 +100,7 @@
           @click.stop="handleNeedMore"
           class="action-btn action-btn-plus"
         >
-          <Plus :size="16" />
+          <Plus :size="20" />
         </button>
       </div>
 
@@ -449,7 +449,7 @@ function handleNeedMore() {
 }
 
 .item-price {
-  font-size: 18px;
+  font-size: 32px;
   font-weight: 700;
   color: #f9fafb;
   flex-shrink: 0;
@@ -467,18 +467,19 @@ function handleNeedMore() {
 }
 
 .progress-text {
-  font-size: 13px;
-  color: #d1d5db;
+  font-size: 24px;
+  font-weight: 700;
+  color: #f9fafb;
 }
 
 .progress-percentage {
-  font-size: 12px;
-  font-weight: 600;
-  color: #9ca3af;
+  font-size: 18px;
+  font-weight: 700;
+  color: #d1d5db;
 }
 
 .progress-bar-container {
-  height: 8px;
+  height: 12px;
   background: rgba(31, 41, 55, 0.8);
   border-radius: 999px;
   overflow: hidden;
@@ -539,10 +540,10 @@ function handleNeedMore() {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
   border: none;
   transition: all 0.15s;
   cursor: pointer;
