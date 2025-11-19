@@ -3,8 +3,8 @@
     <!-- Item name and icon -->
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
-        <Package :size="18" class="text-gray-700" />
-        <h3 class="text-sm font-medium text-gray-900">{{ itemName }}</h3>
+        <Package :size="18" class="text-gray-400" />
+        <h3 class="text-sm font-medium text-gray-100">{{ itemName }}</h3>
       </div>
       <div :class="daysBadgeClass">
         {{ daysRemaining }}d
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Additional info -->
-    <div class="flex justify-between text-xs text-gray-600">
+    <div class="flex justify-between text-xs text-gray-400">
       <span>{{ quantity }} {{ unit }}</span>
       <span>{{ dailyConsumption }}/day</span>
     </div>
@@ -74,6 +74,6 @@ const daysBadgeClass = computed(() => {
 
 <style scoped>
 .stock-item {
-  @apply bg-white rounded-2xl p-4 border border-gray-200 hover:border-gray-300 transition-all duration-150;
+  @apply bg-gray-800 rounded-2xl p-4 border border-gray-700 hover:border-gray-600 transition-all duration-150;
 }
 </style>
