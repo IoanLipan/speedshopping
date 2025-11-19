@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { analyticsService } from '@/services/api'
 import type { SpendingAnalytics } from '@/types'
 
@@ -26,6 +26,11 @@ async function fetchAnalytics() {
     loading.value = false
   }
 }
+
+// Watch for period changes and refetch analytics
+watch(period, () => {
+  fetchAnalytics()
+})
 
 onMounted(() => {
   fetchAnalytics()
