@@ -108,6 +108,46 @@ export const useNecessityStore = defineStore('necessity', () => {
     })
   }
 
+  async function incrementAcquired(id: string, amount: number = 1) {
+    const item = items.value.find(item => item.id === id)
+    if (!item) return
+
+    const newAcquired = Math.min((item.acquiredQuantity || 0) + amount, item.quantity)
+    const isNowComplete = newAcquired >= item.quantity
+
+    await updateItem(id, {
+      acquiredQuantity: newAcquired,
+      completed: isNowComplete,
+      completedAt: isNowComplete ? new Date() : undefined,
+      timesAddedToCart: (item.timesAddedToCart || 0) + 1,
+    })
+
+    return { isNowComplete, item: { ...item, acquiredQuantity: newAcquired } }
+  }
+
+  async function decrementAcquired(id: string, amount: number = 1) {
+    const item = items.value.find(item => item.id === id)
+    if (!item) return
+
+    const newAcquired = Math.max((item.acquiredQuantity || 0) - amount, 0)
+
+    await updateItem(id, {
+      acquiredQuantity: newAcquired,
+      completed: false,
+      completedAt: undefined,
+    })
+  }
+
+  async function increaseTargetQuantity(id: string, amount: number = 1) {
+    const item = items.value.find(item => item.id === id)
+    if (!item) return
+
+    await updateItem(id, {
+      quantity: item.quantity + amount,
+      timesAddedToCart: (item.timesAddedToCart || 0) + 1,
+    })
+  }
+
   return {
     items,
     loading,
@@ -120,5 +160,8 @@ export const useNecessityStore = defineStore('necessity', () => {
     updateItem,
     deleteItem,
     toggleComplete,
+    incrementAcquired,
+    decrementAcquired,
+    increaseTargetQuantity,
   }
 })

@@ -29,7 +29,8 @@ export interface NecessityItem {
   id: string
   userId: string
   name: string
-  quantity: number
+  quantity: number // This is now the target quantity
+  acquiredQuantity: number // How many have been obtained
   price: number
   currency: string
   productUrl?: string
@@ -40,6 +41,7 @@ export interface NecessityItem {
   createdAt: Date
   completedAt?: Date
   notes?: string
+  timesAddedToCart: number // Track frequency for sorting
 }
 
 export interface SpendingAnalytics {
