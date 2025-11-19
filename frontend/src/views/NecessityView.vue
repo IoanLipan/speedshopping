@@ -5,6 +5,7 @@ import { useNecessityStore } from '@/stores/necessity'
 import { useHistoryStore } from '@/stores/history'
 import type { NecessityItem } from '@/types'
 import { necessityItemTemplates, getTemplatesByCategory, getTemplateCategories, type ProductTemplate } from '@/data/productTemplates'
+import SwipeableShoppingCard from '@/components/SwipeableShoppingCard.vue'
 
 const router = useRouter()
 const necessityStore = useNecessityStore()
@@ -88,15 +89,6 @@ onMounted(() => {
   historyStore.updateCanUndoRedo()
 })
 
-function getPriorityColor(priority: string) {
-  switch (priority) {
-    case 'high': return 'bg-red-900/30 text-red-400 border-red-800'
-    case 'medium': return 'bg-orange-900/30 text-orange-400 border-orange-800'
-    case 'low': return 'bg-green-900/30 text-green-400 border-green-800'
-    default: return 'bg-gray-800 text-gray-300 border-gray-700'
-  }
-}
-
 function openAddModal() {
   newItem.value = {
     name: '',
@@ -165,14 +157,6 @@ async function deleteItem(item: NecessityItem) {
       console.error('Failed to delete item:', error)
       alert('Failed to delete item')
     }
-  }
-}
-
-async function toggleComplete(item: NecessityItem) {
-  try {
-    await necessityStore.toggleComplete(item.id)
-  } catch (error) {
-    console.error('Failed to toggle item:', error)
   }
 }
 
@@ -258,19 +242,6 @@ async function transferToSupply(item: NecessityItem) {
   } catch (error) {
     console.error('Failed to transfer to supply:', error)
   }
-}
-
-function getProgressPercentage(item: NecessityItem): number {
-  const acquired = item.acquiredQuantity || 0
-  return (acquired / item.quantity) * 100
-}
-
-function getProgressColor(percentage: number): string {
-  if (percentage >= 100) return 'bg-green-500'
-  if (percentage >= 75) return 'bg-blue-500'
-  if (percentage >= 50) return 'bg-yellow-500'
-  if (percentage >= 25) return 'bg-orange-500'
-  return 'bg-red-500'
 }
 </script>
 
@@ -407,119 +378,80 @@ function getProgressColor(percentage: number): string {
       </div>
 
       <div v-else-if="filteredItems.length === 0" class="text-center py-12">
-        <p class="text-gray-400">No items found. Add your first item to get started!</p>
+        <div class="flex flex-col items-center gap-4">
+          <div class="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center border-2 border-gray-700">
+            <span class="text-5xl">🛒</span>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-gray-200 mb-2">Your shopping list is empty</h3>
+            <p class="text-gray-400">Add items using the Quick Add section or the + Add button</p>
+          </div>
+        </div>
       </div>
 
-      <div v-else class="space-y-3">
-        <div
-          v-for="item in filteredItems"
-          :key="item.id"
-          class="card hover:shadow-md transition-shadow"
-          :class="{ 'opacity-60': item.completed }"
-        >
-          <!-- Header Row -->
-          <div class="flex items-start justify-between mb-3">
+      <div v-else>
+        <!-- Swipe Instructions -->
+        <div class="mb-4 p-4 bg-blue-900/20 border border-blue-800 rounded-xl">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">👉</span>
             <div class="flex-1">
-              <div class="flex items-center gap-2 mb-1">
-                <h3
-                  class="font-semibold text-lg text-white"
-                  :class="{ 'line-through text-gray-500': item.completed }"
-                >
-                  {{ item.name }}
-                </h3>
-                <span v-if="(item.timesAddedToCart || 0) > 1" class="text-xs text-gray-500 bg-gray-700 px-2 py-0.5 rounded">
-                  {{ item.timesAddedToCart }}x added
-                </span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span :class="['px-2 py-1 text-xs font-medium rounded border', getPriorityColor(item.priority)]">
-                  {{ item.priority.toUpperCase() }}
-                </span>
-                <span v-if="item.category" class="text-sm text-gray-400">{{ item.category }}</span>
-                <span class="text-sm text-gray-400">
-                  {{ item.currency }} ${{ (item.price * item.quantity).toFixed(2) }}
-                </span>
-              </div>
+              <p class="text-sm font-medium text-blue-300">Quick Actions</p>
+              <p class="text-xs text-blue-400 mt-0.5">
+                <span class="font-semibold">Swipe left</span> to mark as bought •
+                <span class="font-semibold">Swipe right</span> to add more
+              </p>
             </div>
-            <div v-if="editMode" class="flex gap-2 ml-4">
-              <button @click="openEditModal(item)" class="text-blue-400 hover:text-blue-300">
+          </div>
+        </div>
+
+        <!-- Edit Mode Toolbar -->
+        <div v-if="editMode" class="mb-4 p-3 bg-yellow-900/20 border border-yellow-800 rounded-xl flex items-center gap-2">
+          <span class="text-yellow-400 text-sm font-medium">✎ Edit Mode Active</span>
+          <span class="text-yellow-500 text-xs">Tap items to edit or delete</span>
+        </div>
+
+        <!-- Swipeable Cards -->
+        <div class="space-y-3">
+          <div
+            v-for="item in filteredItems"
+            :key="item.id"
+            class="relative"
+            :class="{ 'opacity-50': item.completed }"
+          >
+            <!-- Edit Mode Overlay -->
+            <div
+              v-if="editMode"
+              class="absolute top-2 right-2 z-10 flex gap-2"
+            >
+              <button
+                @click="openEditModal(item)"
+                class="w-9 h-9 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center shadow-lg transition-all active:scale-95"
+              >
                 ✎
               </button>
-              <button @click="deleteItem(item)" class="text-red-400 hover:text-red-300">
+              <button
+                @click="deleteItem(item)"
+                class="w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-all active:scale-95"
+              >
                 ✕
               </button>
             </div>
-          </div>
 
-          <!-- Progress Bar Section -->
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-gray-400">
-                Progress: <span class="font-medium text-white">{{ item.acquiredQuantity || 0 }}/{{ item.quantity }}</span>
-              </span>
-              <span class="text-gray-400">{{ Math.round(getProgressPercentage(item)) }}%</span>
-            </div>
+            <!-- Swipeable Card -->
+            <SwipeableShoppingCard
+              :item="item"
+              @increment="handleIncrementAcquired(item)"
+              @decrement="handleDecrementAcquired(item)"
+              @need-more="handleIncreaseTarget(item)"
+            />
 
-            <!-- Progress Bar -->
-            <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
-              <div
-                :class="['h-full transition-all duration-300 rounded-full', getProgressColor(getProgressPercentage(item))]"
-                :style="{ width: `${getProgressPercentage(item)}%` }"
-              ></div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex items-center gap-2 mt-3">
-              <button
-                @click="handleDecrementAcquired(item)"
-                :disabled="(item.acquiredQuantity || 0) <= 0"
-                class="btn btn-secondary text-sm px-3 py-1"
-                :class="{ 'opacity-50 cursor-not-allowed': (item.acquiredQuantity || 0) <= 0 }"
-              >
-                −
-              </button>
-              <button
-                @click="handleIncrementAcquired(item)"
-                :disabled="(item.acquiredQuantity || 0) >= item.quantity"
-                class="btn btn-success text-sm px-3 py-1 flex-1"
-                :class="{ 'opacity-50 cursor-not-allowed': (item.acquiredQuantity || 0) >= item.quantity }"
-              >
-                Got 1 ✓
-              </button>
-              <button
-                @click="handleIncreaseTarget(item)"
-                class="btn btn-warning text-sm px-3 py-1"
-                title="Need more"
-              >
-                + Need More
-              </button>
+            <!-- Completed Badge -->
+            <div v-if="item.completed" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+              <div class="bg-green-500 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-lg rotate-12">
+                ✓ COMPLETED
+              </div>
             </div>
           </div>
-
-          <!-- Links -->
-          <div v-if="item.productUrl || item.addToCartUrl" class="flex gap-3 mt-3 pt-3 border-t border-gray-700">
-            <a
-              v-if="item.productUrl"
-              :href="item.productUrl"
-              target="_blank"
-              class="text-sm text-blue-400 hover:text-blue-300"
-            >
-              🔗 View Product
-            </a>
-            <a
-              v-if="item.addToCartUrl"
-              :href="item.addToCartUrl"
-              target="_blank"
-              class="text-sm text-green-400 hover:text-green-300"
-            >
-              🛒 Add to Cart
-            </a>
-          </div>
-
-          <!-- Notes -->
-          <p v-if="item.notes && editMode" class="text-sm text-gray-400 mt-3 pt-3 border-t border-gray-700">
-            {{ item.notes }}
-          </p>
         </div>
       </div>
     </main>
