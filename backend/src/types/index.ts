@@ -3,6 +3,7 @@ export interface SupplyItem {
   userId: string
   name: string
   quantity: number
+  unit?: string
   dailyConsumption: number
   daysRemaining: number
   price: number
@@ -21,6 +22,7 @@ export interface NecessityItem {
   userId: string
   name: string
   quantity: number
+  acquiredQuantity: number
   price: number
   currency: string
   productUrl?: string
@@ -31,6 +33,7 @@ export interface NecessityItem {
   createdAt: Date
   completedAt?: Date
   notes?: string
+  timesAddedToCart: number
 }
 
 export interface NotificationSettings {

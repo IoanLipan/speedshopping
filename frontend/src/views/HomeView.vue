@@ -45,9 +45,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900 flex flex-col">
+  <div class="h-full flex flex-col bg-gray-900 overflow-hidden">
     <!-- Minimalist Header - Fixed -->
-    <header class="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
+    <header class="flex-none bg-gray-800 border-b border-gray-700">
       <div class="px-4 py-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">

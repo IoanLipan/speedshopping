@@ -246,9 +246,9 @@ async function transferToSupply(item: NecessityItem) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900">
-    <!-- Header - Modern & Sticky -->
-    <header class="sticky top-0 bg-gray-800/95 backdrop-blur-sm border-b border-gray-700 z-40">
+  <div class="h-full flex flex-col bg-gray-900 overflow-hidden">
+    <!-- Header - Fixed -->
+    <header class="flex-none bg-gray-800/95 backdrop-blur-sm border-b border-gray-700 z-10">
       <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
@@ -285,8 +285,9 @@ async function transferToSupply(item: NecessityItem) {
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <!-- Main Content - Scrollable -->
+    <main class="flex-1 overflow-y-auto">
+      <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
       <!-- Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div class="card">
@@ -453,6 +454,7 @@ async function transferToSupply(item: NecessityItem) {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </main>
 

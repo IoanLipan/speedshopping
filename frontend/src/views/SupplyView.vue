@@ -201,9 +201,9 @@ async function quickAddTemplate(template: ProductTemplate) {
 </script>
 
 <template>
-  <div class="min-h-screen">
-    <!-- Minimalist Header -->
-    <header class="bg-white border-b border-gray-200">
+  <div class="h-full flex flex-col bg-white overflow-hidden">
+    <!-- Minimalist Header - Fixed -->
+    <header class="flex-none bg-white border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-4">
@@ -243,8 +243,9 @@ async function quickAddTemplate(template: ProductTemplate) {
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+    <!-- Main Content - Scrollable -->
+    <main class="flex-1 overflow-y-auto">
+      <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
       <!-- Filters -->
       <div class="mb-6 flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
@@ -412,6 +413,7 @@ async function quickAddTemplate(template: ProductTemplate) {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </main>
 
