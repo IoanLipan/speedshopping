@@ -18,10 +18,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="app" class="min-h-screen flex flex-col">
-    <div class="flex-1" :class="{ 'pb-20': showBottomNav }">
+  <div id="app" class="h-screen flex flex-col overflow-hidden">
+    <!-- Main content area -->
+    <div class="flex-1 overflow-hidden">
       <RouterView />
     </div>
+    <!-- Bottom navigation -->
     <BottomNav v-if="showBottomNav" />
   </div>
 </template>
+
+<style>
+/* Global CSS variables for layout calculations */
+:root {
+  --bottom-nav-height: calc(4rem + env(safe-area-inset-bottom, 0px));
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+</style>

@@ -39,7 +39,8 @@ const isActive = (path: string) => {
   @apply px-2 py-3;
   @apply z-50;
   /* Safe area for mobile devices with notches */
-  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  padding-bottom: var(--safe-area-bottom, 0px);
+  height: var(--bottom-nav-height);
 }
 
 .nav-item {

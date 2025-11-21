@@ -3,6 +3,36 @@ import type { SupplyItem } from '../types/index.js'
 
 const TABLE = 'supply_items'
 
+/**
+ * Calculate days remaining with proper validation
+ * @param quantity - Current quantity (must be >= 0)
+ * @param dailyConsumption - Daily consumption rate (must be >= 0)
+ * @returns Days remaining (0 if invalid inputs, 999 if no consumption)
+ */
+function calculateDaysRemaining(quantity: number, dailyConsumption: number): number {
+  // Validate inputs
+  if (quantity < 0 || dailyConsumption < 0) {
+    console.warn(`Invalid input for days calculation: quantity=${quantity}, dailyConsumption=${dailyConsumption}`)
+    return 0
+  }
+
+  // If no consumption, item will last indefinitely
+  if (dailyConsumption === 0) {
+    return 999
+  }
+
+  // Calculate days remaining
+  const days = Math.floor(quantity / dailyConsumption)
+
+  // Handle edge cases
+  if (!isFinite(days) || isNaN(days)) {
+    console.error(`Invalid calculation result: ${days} for quantity=${quantity}, dailyConsumption=${dailyConsumption}`)
+    return 0
+  }
+
+  return Math.max(0, days) // Ensure non-negative
+}
+
 export class SupplyService {
   async getAll(userId: string): Promise<SupplyItem[]> {
     const { data, error } = await supabase
@@ -66,9 +96,7 @@ export class SupplyService {
   }
 
   async create(userId: string, data: Omit<SupplyItem, 'id' | 'userId' | 'createdAt' | 'lastUpdated' | 'daysRemaining'>): Promise<SupplyItem> {
-    const daysRemaining = data.dailyConsumption > 0
-      ? Math.floor(data.quantity / data.dailyConsumption)
-      : 999
+    const daysRemaining = calculateDaysRemaining(data.quantity, data.dailyConsumption)
 
     const { data: inserted, error } = await supabase
       .from(TABLE)
@@ -124,9 +152,7 @@ export class SupplyService {
     const quantity = updates.quantity ?? existing.quantity
     const dailyConsumption = updates.dailyConsumption ?? existing.dailyConsumption
 
-    const daysRemaining = dailyConsumption > 0
-      ? Math.floor(quantity / dailyConsumption)
-      : 999
+    const daysRemaining = calculateDaysRemaining(quantity, dailyConsumption)
 
     const updateData: any = {
       days_remaining: daysRemaining,
