@@ -2,18 +2,24 @@
 import { onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useStatusBar } from '@/composables/useMobile'
 import BottomNav from '@/components/BottomNav.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
+const statusBar = useStatusBar()
 
 // Show bottom nav only on authenticated pages
 const showBottomNav = computed(() => {
   return authStore.isAuthenticated && route.path !== '/login'
 })
 
-onMounted(() => {
+onMounted(async () => {
   authStore.initAuth()
+
+  // Initialize mobile features
+  await statusBar.setDarkMode()
+  await statusBar.show()
 })
 </script>
 

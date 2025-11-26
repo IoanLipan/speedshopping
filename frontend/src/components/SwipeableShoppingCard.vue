@@ -52,7 +52,7 @@
         </div>
 
         <div class="item-price">
-          ${{ (item.price * item.quantity).toFixed(2) }}
+          {{ formatCurrency((item.price || 0) * item.quantity) }}
         </div>
       </div>
 
@@ -83,6 +83,7 @@
           @click.stop="handleDecrement"
           :disabled="(item.acquiredQuantity || 0) <= 0"
           class="action-btn action-btn-minus"
+          aria-label="Decrease quantity"
         >
           <Minus :size="20" />
         </button>
@@ -91,6 +92,7 @@
           @click.stop="handleIncrement"
           :disabled="(item.acquiredQuantity || 0) >= item.quantity"
           class="action-btn action-btn-check"
+          aria-label="Mark one as acquired"
         >
           <Check :size="20" />
           <span>Got 1</span>
@@ -99,6 +101,7 @@
         <button
           @click.stop="handleNeedMore"
           class="action-btn action-btn-plus"
+          aria-label="Need more items"
         >
           <Plus :size="20" />
         </button>
@@ -118,6 +121,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { ShoppingBag, CheckCircle, PlusCircle, Check, Plus, Minus } from 'lucide-vue-next'
 import type { NecessityItem } from '@/types'
+import { useSwipeGesture } from '@/composables/useSwipeGesture'
+import { formatCurrency } from '@/utils/formatters'
 
 interface Props {
   item: NecessityItem
@@ -133,11 +138,25 @@ const emit = defineEmits<{
 // Swipe state
 const card = ref<HTMLElement | null>(null)
 const cardWrapper = ref<HTMLElement | null>(null)
-const offsetX = ref(0)
-const startX = ref(0)
-const isDragging = ref(false)
-const swipeDirection = ref<'left' | 'right' | null>(null)
 const showSwipeHint = ref(false)
+
+// Use swipe gesture composable
+const {
+  offsetX,
+  swipeDirection,
+  handleTouchStart,
+  handleTouchMove,
+  handleTouchEnd,
+  handleMouseDown,
+} = useSwipeGesture({
+  onSwipeLeft: async () => {
+    emit('increment')
+  },
+  onSwipeRight: async () => {
+    emit('needMore')
+  },
+  enableHaptics: true,
+})
 
 // Check if user has seen swipe hint before
 onMounted(() => {
@@ -155,8 +174,6 @@ const progressPercentage = computed(() => {
   const acquired = props.item.acquiredQuantity || 0
   return Math.round((acquired / props.item.quantity) * 100)
 })
-
-const SWIPE_THRESHOLD = 100
 
 function getPriorityClass(priority: string) {
   const classes = {
@@ -182,97 +199,6 @@ function getProgressColorClass(percentage: number) {
   if (percentage >= 50) return 'progress-medium'
   if (percentage >= 25) return 'progress-low'
   return 'progress-none'
-}
-
-// Touch handlers
-function handleTouchStart(e: TouchEvent) {
-  startX.value = e.touches[0].clientX
-  isDragging.value = true
-}
-
-function handleTouchMove(e: TouchEvent) {
-  if (!isDragging.value) return
-
-  const currentX = e.touches[0].clientX
-  const diff = currentX - startX.value
-
-  // Limit swipe distance
-  offsetX.value = Math.max(-200, Math.min(200, diff))
-
-  // Update swipe direction
-  if (offsetX.value < -20) {
-    swipeDirection.value = 'left'
-  } else if (offsetX.value > 20) {
-    swipeDirection.value = 'right'
-  } else {
-    swipeDirection.value = null
-  }
-}
-
-function handleTouchEnd() {
-  isDragging.value = false
-
-  // Check if swipe threshold was met
-  if (offsetX.value < -SWIPE_THRESHOLD) {
-    // Swiped left - Mark as bought
-    triggerSwipeAction('left')
-  } else if (offsetX.value > SWIPE_THRESHOLD) {
-    // Swiped right - Need more
-    triggerSwipeAction('right')
-  }
-
-  // Reset
-  offsetX.value = 0
-  swipeDirection.value = null
-}
-
-// Mouse handlers (for desktop testing)
-function handleMouseDown(e: MouseEvent) {
-  startX.value = e.clientX
-  isDragging.value = true
-
-  const handleMouseMove = (moveEvent: MouseEvent) => {
-    if (!isDragging.value) return
-
-    const diff = moveEvent.clientX - startX.value
-    offsetX.value = Math.max(-200, Math.min(200, diff))
-
-    if (offsetX.value < -20) {
-      swipeDirection.value = 'left'
-    } else if (offsetX.value > 20) {
-      swipeDirection.value = 'right'
-    } else {
-      swipeDirection.value = null
-    }
-  }
-
-  const handleMouseUp = () => {
-    if (offsetX.value < -SWIPE_THRESHOLD) {
-      triggerSwipeAction('left')
-    } else if (offsetX.value > SWIPE_THRESHOLD) {
-      triggerSwipeAction('right')
-    }
-
-    offsetX.value = 0
-    swipeDirection.value = null
-    isDragging.value = false
-
-    document.removeEventListener('mousemove', handleMouseMove)
-    document.removeEventListener('mouseup', handleMouseUp)
-  }
-
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp)
-}
-
-function triggerSwipeAction(direction: 'left' | 'right') {
-  if (direction === 'left') {
-    // Got it!
-    emit('increment')
-  } else {
-    // Need more
-    emit('needMore')
-  }
 }
 
 function handleIncrement() {
@@ -356,6 +282,7 @@ function handleNeedMore() {
   transition: transform 0.1s ease-out, box-shadow 0.2s;
   touch-action: pan-y;
   cursor: grab;
+  min-height: 48px; /* Ensure minimum touch target */
 }
 
 .shopping-card:active {
@@ -548,6 +475,7 @@ function handleNeedMore() {
   transition: all 0.15s;
   cursor: pointer;
   touch-action: manipulation;
+  min-height: 48px; /* Ensure minimum touch target */
 }
 
 .action-btn:active {
@@ -557,6 +485,11 @@ function handleNeedMore() {
 .action-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
+}
+
+.action-btn:disabled:active {
+  transform: none;
 }
 
 .action-btn-minus {
@@ -588,7 +521,7 @@ function handleNeedMore() {
   border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
-.action-btn-plus:hover {
+.action-btn-plus:hover:not(:disabled) {
   background: rgba(249, 115, 22, 0.25);
   border-color: rgba(249, 115, 22, 0.5);
 }
@@ -630,5 +563,20 @@ function handleNeedMore() {
 @keyframes pulse {
   0%, 100% { opacity: 0.5; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  .item-price {
+    font-size: 24px;
+  }
+
+  .progress-text {
+    font-size: 20px;
+  }
+
+  .action-btn {
+    padding: 12px 16px;
+  }
 }
 </style>

@@ -83,6 +83,8 @@ export const useAuthStore = defineStore('auth', () => {
                 currency: 'USD',
                 productUrl: '',
                 addToCartUrl: '',
+                acquiredQuantity: 0,
+                timesAddedToCart: 0,
               })
             } catch (err) {
               console.error(`Failed to add default item ${item.name}:`, err)
